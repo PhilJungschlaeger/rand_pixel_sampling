@@ -1,97 +1,96 @@
-#include <stdio.h>
-#include <opencv2/opencv.hpp>
-#include <time.h> //will  be seed
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <sstream>
-#include <iostream>
 /*
-input:							big_picture(any filetype)
-points_amount:			int
-//(destination res:		x,y) optional -> maybe big_pic.res is best!
+info:
+  random_sampling_storing.cpp simply resamples a given input picture with a wished
+  number of samples.  each sample will be taken random. Using our rsf_writer, we
+  store the pixels(x,y;r,g,b) in a .txt like file:
 
--> out: rsf file wiht header+points_amount of lines
+  example use: ./rand_sample_store "./spuele.jpg" 20
+  -> output is ./output.txt
 
-getseed
-srand(time(NULL));
-
-for(int i; i<points_amount; i++)
-{
-	x= rand...
-	y= rand..
-	get pixelcolor	(auf/abrunden) //nicht nötig, um rundungsfehler wegzulassen int
-	rsw_write(x,y, clr)
-}
-
+todo:
+  |necessary:
+  -...?
+  |optional:
+  -tag-like parameter reading?
+  -we might want to transmit more meta data to the rsf_writer?
+  -a desired outputfilename could be integrated
+  -a better calculation for the running time..
+  -..?
 */
-using namespace cv;
-//using namespace std;
+#include <stdio.h>
+#include <opencv2/opencv.hpp> //image operations
+#include <time.h>             //time measuring & seed
+#include <string.h>
+#include "rsf_writer.hpp"
+#include "pixel.hpp"
+
+void usage(){
+  std::cout<<"----------------------------------------------------------------\n";
+  std::cout<<"usage: ./rand_sample_store ";
+  std::cout<<"\"./picture_filepath\" ";
+  std::cout<<"samples_amount ";
+  //std::cout<<"\"./outputfilepath\"\n\n";
+  std::cout<<"\n\n";
+
+  std::cout<<"(required)  String:   ./picture_filepath\n";
+  std::cout<<"(required)  int:      samples_amount\n\n";
+  //std::cout<<"(optional)  String:   ./outputfilepath\n";
+  std::cout<<"outpufile:  output.txt";
+  std::cout<<"----------------------------------------------------------------\n";
+}
 
 int main(int argc, char** argv )
 {
-    if ( argc != 3 )
+//CHECK_INPUT:
+    //CHECK LENGTH
+    if ( argc != 3 )//|| argc != 4)
     {
-        printf("usage: DisplayImage.out <Image_Path>\n");
+        usage();
         return -1;
     }
 
+    //  READ IMAGE_INPUT:
     Mat image;
 		std::string input= argv[1];
     image = imread( input, 1 );
-
     if ( !image.data )
     {
-        printf("No image data \n");
+        std::cout<<"found no image data \n";
+        usage();
         return -1;
     }
 
+    //  READ SAMPLES-AMOUNT:
 		char *endptr;
 		int samples_amount= strtol(argv[2], &endptr, 10);
 		if (*endptr != '\0') {
-			std::cout<<"usage: second parameter has to be an integer\n";
+			std::cout<<"second parameter was not an integer\n";
+      usage();
 			return -1;
 		}
 
-		//input is fine
-		srand(time(NULL));
+//MAIN:
+		srand(time(NULL));  //SEED
 		int SIZEX=image.cols;
 		int SIZEY=image.rows;
 
-		int irandx;
-		int irandy;
+    Pixel pix;
 		Vec3b color;
+    std::string output_name="output.txt";
+    RsfWriter writer(output_name);    //will be wrting our pixel
 
-			std::string output_filename="from"+input;//+"_samples";
-			//std::string test= std::to_string(4);//samples_amount);
-
-		  std::fstream file("output_filename", std::ios::out);
-		  file.clear();
-		  file << "from: "<<input
-		       << " "<<samples_amount<< "samples\n";
-
-
+    //take samples:
+    std::cout<<"now sampling..";
+    const clock_t begin_time = clock();
 		for (int i=0; i<samples_amount; i++)
 		{
-			irandx= rand() % SIZEX;
-		  irandy= rand() % SIZEY;
-			color = image.at<Vec3b>(Point(irandx,irandy));
-			file << irandx << ",";
-			file << irandy << ";";
-			file << (int)color[0] << ",";
-			file << (int)color[1] << ",";
-			file << (int)color[2] << ";\n";
-			/*
-			file <<"x:"<< irandx << ", ";
-			file <<"y:"<<irandy << "; ";
-			file <<"r:"<< (int)color[0] << ", ";
-			file <<"g:"<< (int)color[1] << ", ";
-			file <<"b:"<< (int)color[2] << ";\n";
-			*/
+      pix.x= rand() % SIZEX;
+		  pix.y= rand() % SIZEY;
+			pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
+      writer.add(pix);
 		}
-
-		file.close();
+    std::cout<<"done\nnow storing..";
+    writer.save();
+    std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
     return 0;
 }
