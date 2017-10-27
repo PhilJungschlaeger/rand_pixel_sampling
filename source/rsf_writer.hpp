@@ -14,6 +14,7 @@ public:
   void add(Pixel const& p);
   void save();
   void clean();
+  bool exists(Pixel const& p);
 
 private:
   std::string file_;

@@ -30,19 +30,31 @@ void RsfWriter::add(Pixel const& p)
   data_.push_back(p);
 }
 
+bool RsfWriter::exists(Pixel const& p)
+{
+  for ( std::vector<Pixel>::iterator i = data_.begin(); i != data_.end(); i++ ) 
+  {
+    if((i->x==p.x) &&(i->y==p.y))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 void RsfWriter::save()
 {
   std::fstream file(file_.c_str(), std::ios::out);
   //header:?
-  file<<"samples: "<< samples_<<"\n";
+  //file<<"samples: "<< samples_<<"\n";
 
   //data:
   for ( std::vector<Pixel>::iterator p = data_.begin(); p != data_.end(); p++ ) {
-    file << p->x << ",";
-    file << p->y << ";";
-    file << (int)p->color[0] << ",";
-    file << (int)p->color[1] << ",";
-    file << (int)p->color[2] << ";\n";
+    file << p->x << " ";
+    file << p->y << " ";
+    file << (int)p->color[0] << " ";
+    file << (int)p->color[1] << " ";
+    file << (int)p->color[2] << "\n";
   }
   file.close();
 }

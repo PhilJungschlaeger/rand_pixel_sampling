@@ -51,6 +51,7 @@ int main(int argc, char** argv )
 
     //  READ IMAGE_INPUT:
     Mat image;
+
 		std::string input= argv[1];
     image = imread( input, 1 );
     if ( !image.data )
@@ -73,11 +74,13 @@ int main(int argc, char** argv )
 		srand(time(NULL));  //SEED
 		int SIZEX=image.cols;
 		int SIZEY=image.rows;
+    Mat output(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));
 
     Pixel pix;
 		Vec3b color;
-    std::string output_name="output.txt";
-    RsfWriter writer(output_name);    //will be wrting our pixel
+    std::string output_rand="output_rand.txt";
+    std::string output_grid="output_grid.txt";
+    RsfWriter writer_rand(output_rand);    //will be wrting our pixel
 
     //take samples:
     std::cout<<"now sampling..";
@@ -87,10 +90,18 @@ int main(int argc, char** argv )
       pix.x= rand() % SIZEX;
 		  pix.y= rand() % SIZEY;
 			pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
-      writer.add(pix);
+      if(!writer_rand.exists(pix))
+      {
+        writer_rand.add(pix);
+        output.at<Vec3b>(Point(pix.x,pix.y))=pix.color;
+      }else{
+        i--;
+      }
 		}
+
     std::cout<<"done\nnow storing..";
-    writer.save();
+    writer_rand.save();
+    imwrite( "output.jpg", output );
     std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
     return 0;
 }
