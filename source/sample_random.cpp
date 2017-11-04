@@ -23,6 +23,7 @@ todo:
 #include <string.h>
 #include "rsf_writer.hpp"
 #include "pixel.hpp"
+using namespace cv;
 
 void usage(){
   std::cout<<"----------------------------------------------------------------\n";
@@ -74,13 +75,11 @@ int main(int argc, char** argv )
 		srand(time(NULL));  //SEED
 		int SIZEX=image.cols;
 		int SIZEY=image.rows;
-    Mat output(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));
 
     Pixel pix;
 		Vec3b color;
     std::string output_rand="output_rand.txt";
-    std::string output_grid="output_grid.txt";
-    RsfWriter writer_rand(output_rand);    //will be wrting our pixel
+    RsfWriter writer_rand(output_rand, SIZEX, SIZEY);    //will be wrting our pixel
 
     //take samples:
     std::cout<<"now sampling..";
@@ -90,10 +89,9 @@ int main(int argc, char** argv )
       pix.x= rand() % SIZEX;
 		  pix.y= rand() % SIZEY;
 			pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
-      if(!writer_rand.exists(pix))
+      if(!writer_rand.exists(pix))  //no doubles please!
       {
         writer_rand.add(pix);
-        output.at<Vec3b>(Point(pix.x,pix.y))=pix.color;
       }else{
         i--;
       }
@@ -101,7 +99,6 @@ int main(int argc, char** argv )
 
     std::cout<<"done\nnow storing..";
     writer_rand.save();
-    imwrite( "output.jpg", output );
     std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
     return 0;
 }

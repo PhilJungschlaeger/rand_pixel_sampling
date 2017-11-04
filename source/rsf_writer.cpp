@@ -18,8 +18,10 @@ todo:
 #include <algorithm>
 
 
-RsfWriter::RsfWriter(std::string const& file):
+RsfWriter::RsfWriter(std::string const& file, int x, int y):
   file_(file),
+  x_(x),
+  y_(y),
   samples_(0),
   data_()
   {clean();}
@@ -32,7 +34,7 @@ void RsfWriter::add(Pixel const& p)
 
 bool RsfWriter::exists(Pixel const& p)
 {
-  for ( std::vector<Pixel>::iterator i = data_.begin(); i != data_.end(); i++ ) 
+  for ( std::vector<Pixel>::iterator i = data_.begin(); i != data_.end(); i++ )
   {
     if((i->x==p.x) &&(i->y==p.y))
     {
@@ -49,6 +51,7 @@ void RsfWriter::save()
   //file<<"samples: "<< samples_<<"\n";
 
   //data:
+  file << x_<<" "<<y_<<"\n";
   for ( std::vector<Pixel>::iterator p = data_.begin(); p != data_.end(); p++ ) {
     file << p->x << " ";
     file << p->y << " ";

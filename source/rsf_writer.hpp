@@ -8,7 +8,7 @@ class RsfWriter
 {
 
 public:
-  RsfWriter(std::string const& file);
+  RsfWriter(std::string const& file, int x, int y);
 
 public:
   void add(Pixel const& p);
@@ -18,6 +18,8 @@ public:
 
 private:
   std::string file_;
+  int x_;
+  int y_;
   int samples_;
   std::vector<Pixel> data_;
 };
