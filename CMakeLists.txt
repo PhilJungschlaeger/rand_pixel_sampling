@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.9)
 project (sample)
 project (nointerpretation)
+project (distanceinterpretation)
 find_package(OpenCV)
 #Bring the headers, such as Student.h into the project
 include_directories(include)
@@ -13,6 +14,9 @@ file(GLOB SOURCES "source/*.cpp")
 
 add_executable(nointerpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_draw.cpp)
 target_link_libraries( nointerpretation ${OpenCV_LIBS} )
+
+add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw.cpp)
+target_link_libraries( distanceinterpretation ${OpenCV_LIBS} )
 
 add_executable(sample source/pixel.cpp source/rsf_writer.cpp source/sample_random.cpp)
 target_link_libraries( sample ${OpenCV_LIBS} )
