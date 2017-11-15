@@ -1,23 +1,52 @@
 //simply reads txt-like pixeldata and draws a picture without interpretation
+/*
+This script reads pixel data in our ppm-like format:
+width height
+x1 y1 r1 g1 b1
+x2 y2 r2 g2 b2
+
+the script draws each pixel. for each undrawn pixel it interpolates its
+color using the (linear,squared,..)distance to the n closest points.
+*/
 
 #include <stdio.h>
-#include <opencv2/opencv.hpp> //image operations
-#include <time.h>             //time measuring & seed
+#include <opencv2/opencv.hpp>   //image operations
+#include <time.h>               //time measuring & seed
 #include <string.h>
 #include "pixel.hpp"
 #include <math.h>
 
 using namespace cv;
-//checks if it is sample and gives pixel in range+ faktor back
+
+/*
+calculates the distance between two points:
+*/
 double dist(int x1, int x2, int y1, int y2)
 {
   double distance=sqrt(std::pow((double)x1-x2,2)+std::pow((double)y1-y2,2)); //pow: nur pythagoras!!!
   return distance;
 }
-bool is_sample(std::vector<Pixel> & v_all, int x, int y, double& sum,  std::vector<Pixel> & v_out, int& number, double& faktor, int rel)
-{
+/*
+checks, wether a Pixel(x,y) is part of a vector v_all.
+so it returns true or false.
+if the return says false:
+  -the scipts wants to find the n(=number) closest pixel.
+  -it stores them in the v_out vector
+  -you can read the sum of these pixels distaces to the pixel(x,y)
+  -to define, wether you want the linear, squared or power of k-th distance, you use rel
+  -later, you get a faktor
 
-  for(std::vector<Pixel>::iterator p = v_all.begin(); p != v_all.end(); ++p) {
+todo:
+  -BB programmieren(muss eig nicht ins format, weil N-Schritte reichen)
+  -zwei BB-vektoren übergeben.
+    1.random
+    2.missing-pixel
+*/
+//bool is_sample(std::vector<Pixel> & v_all, int x, int y, double& sum,  std::vector<Pixel> & v_out, int& number, double& faktor, int rel)
+bool is_sample(std::vector<Pixel> & v_all, int x, int y, int& number, std::vector<Pixel> & v_out, double& sum, int rel, double& faktor)
+{
+  //run through all pixel, to check, wether x,y are new:
+  for(std::vector<Pixel>::iterator p = v_all.begin(); p != v_all.end(); ++p) {    //  N-steps
     if(p->x==x&&p->y==y)
     {
       return true;
@@ -48,8 +77,6 @@ bool is_sample(std::vector<Pixel> & v_all, int x, int y, double& sum,  std::vect
     {
       v_out.erase (v_out.begin()+number,v_out.end());
     }
-
-    //qsum+=std::pow(distance,2);
   }
   //vector fertig.. number times closest points!:
   for(std::vector<Pixel>::iterator o = v_out.begin(); o != v_out.end(); ++o) {
@@ -62,6 +89,7 @@ bool is_sample(std::vector<Pixel> & v_all, int x, int y, double& sum,  std::vect
   }
   return false;
 }
+
 int main(int argc, char** argv )
 {
 //CHECK_INPUT:
@@ -130,9 +158,10 @@ int main(int argc, char** argv )
             double qsum=0;
             int number=3;
             double faktor=0;
-            int rel=10;
+            int rel=3;
             std::vector<Pixel> collection;
-            if(!is_sample(samples,x,y,sum,collection,number,faktor,rel))
+
+            if(!is_sample(samples,x,y,number,collection, sum,rel,faktor))
             {
               std::cout<<"----------newPix: "<<x<<","<<y<<"\n";
               double r=0;

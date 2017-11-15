@@ -15,7 +15,7 @@ file(GLOB SOURCES "source/*.cpp")
 add_executable(nointerpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_draw.cpp)
 target_link_libraries( nointerpretation ${OpenCV_LIBS} )
 
-add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw.cpp)
+add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw2.cpp)
 target_link_libraries( distanceinterpretation ${OpenCV_LIBS} )
 
 add_executable(sample source/pixel.cpp source/rsf_writer.cpp source/sample_random.cpp)
