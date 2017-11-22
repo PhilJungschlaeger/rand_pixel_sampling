@@ -6,25 +6,109 @@
 #include <math.h>
 #include <vector>
 //#include <pair>
-int X=5;
-int Y=5;
+//choose wise: 674x674calc
+
+
+int X=1;
+int Y=1;//vs 7
+//28 27 28.5
 int SIZEX;
 int SIZEY;
+
+bool info=false;
 
 //allow any function
 using namespace cv;
 int xy_to_N(int x, int y, int width, int height, int X, int Y)
-{
+{//grob getestet!
   int N;
-  N=x*X/SIZEX+X*(y*Y/SIZEY);
+  N=std::floor((double)x*((double)X/((double)SIZEX)))+X*std::floor(((double)y*((double)Y/((double)SIZEY))));
+  //N=std::floor((x*X/(SIZEX))+std::floor(X*(y*(Y/(SIZEY))))); falsch
+
+  if(info)
+  {
+      std::cout<<N<<" "<<X/SIZEX<<" \n";
+  }
+
   return N;
 }
 
 double dist(int x1, int x2, int y1, int y2)
 {
   double distance=sqrt(std::pow((double)x1-x2,2)+std::pow((double)y1-y2,2)); //pow: nur pythagoras!!!
-//  std::cout<<distance<<" asifdsa\n";
+  if(info)
+  {
+    std::cout<<x1-x2<<" "<<y1-y2<<" "<<distance<<" asifdsa\n";
+  }
+
   return distance;
+}
+
+//double!=!?!?!?
+double closest_dist(int x, int y, int n, int n_new)
+{
+  double n_d;
+  if(n%X==n_new%X)  //gleiche spalte
+  {
+    //std::cout<<"gl. spalte!\n";
+    if(n>n_new) //drüber
+    {
+      n_d=std::abs((((n_new+X)/X)*((double)SIZEY/((double)Y)))-y);      //check
+
+      //std::cout<<"dr: "<<(n_new+X)/X<<" "<<(SIZEY/Y)<<" \n";
+    }else{      //drunter
+
+      //2/2 * (20/2) -0
+      n_d=std::abs(((n_new/X)*((double)SIZEY/((double)Y)))-y);     //check
+    }
+  }else if(n/X==n_new/X) //gleiche reihe
+  {
+    //std::cout<<"gl. reihe!\n";
+    if(n<n_new) //rechts
+    {
+      n_d=std::abs((n_new%X)*((double)SIZEX/((double)X))-x);    //check
+
+    }else{      //links
+      n_d=std::abs(x-(((n_new+1)%X)*((double)SIZEX/((double)X)))); //check
+    }
+  }else if(n%X<n_new%X)//rechts liegend
+  {
+    if(n/X>n_new/X) //oberhlab
+    {
+      //punkt: linksunten
+      //std::cout<<"br: linksunt!\n";
+      int x_n=(n_new%X)*(SIZEX/X);      //wasist mit krummen pixeln!? -> nur passend, erstmal!!!!!!!!!!!!!!
+      int y_n=((n_new/X)+1)*(SIZEY/Y);
+      n_d=dist(x,x_n,y, y_n);
+    }else{          //unterhalb
+      //punkt: links oben
+
+      int x_n=(n_new%X)*(SIZEX/X);
+      int y_n=(n_new/X)*(SIZEY/Y);
+      //std::cout<<"br: linksoben!:"<<x_n<<" "<<y_n<<"\n";
+      n_d=dist(x,x_n,y, y_n);
+    }
+
+  }else{  //links liegend
+    if(n/X>n_new/X) //oberhlab
+    {
+      //punkt: rechtsunten:
+    //  std::cout<<"br: rechtsunt!\n";
+      int x_n=((n_new%X)+1)*(SIZEX/X);
+      int y_n=((n_new/X)+1)*(SIZEY/Y);
+      n_d=dist(x,x_n,y, y_n);
+    }else{          //unterhalb
+      //punkt: rechts oben
+      //std::cout<<"br: rechtsoben\n";
+      int x_n=((n_new%X)+1)*(SIZEX/X);
+      int y_n=((n_new/X))*(SIZEY/Y);
+      n_d=dist(x,x_n,y, y_n);
+    }
+  }
+  if(n_d>1){//for safety reasons
+    n_d-=1; //nötig?
+  }
+  return n_d;
 }
 
 /////////////////////////////////////////////////////////////!!
@@ -32,22 +116,32 @@ double dist(int x1, int x2, int y1, int y2)
 // in der höheren ebene drüberusmieren!
 void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n, int& count, std::list<std::pair<double,Vec3b> > & v_out)
 {
+  int first_box=n;
   std::list<std::pair<double,int> > bboxes;
   bboxes.push_back(std::pair<double,int>(0.0,n));
-  std::vector<int> visited;
+  std::vector<int> visited; //maybe change name.. stores buckets, that are/wer to be visited
   double farest=99999999;//infinity?
   //es gibt noch boxen?, die nähste box ist näher als der entfernteste, wir haben noch nicht genug
   int cnt=0;
+  visited.push_back(n);
+
   while((bboxes.size()))
   {
-    if(((farest>bboxes.begin()->first)|(v_out.size()<count)))
+    //std::cout<<bboxes.size()<<" size\n";
+    //std::cout<<farest<<" far\n";
+    if(((farest>=bboxes.begin()->first)|(v_out.size()<count)))
     {
 
-   //std::cout<<cnt<<" cnt: "<<n<<"\n";
+
 
     n=bboxes.begin()->second;
+    if(info)
+    {
+      std::cout<<cnt<<" cnt: "<<n<<".....................\n";
+    }
 
-    visited.push_back(n);
+
+
 
 
     //erstmal box checken:
@@ -67,11 +161,44 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
         //lieber normale for-schleife? und dann checken, ob kleiner als count ist..
         for(std::list<std::pair<double,Vec3b> >::iterator o = v_out.begin(); o != v_out.end(); ++o) {
 
-          if(distance<o->first) //sobald kleiner, inserten! noch verbessrern?
+          //achtung mehrdeutigkeit: wenn zwei pixel gleichweit entfernt sind.. welcher wird als n
+          //nöchster in betracht gezogen?!?
+          if(distance<=o->first) //sobald kleiner, inserten! noch verbessrern?
           {
-            inserted=1;
-            v_out.insert(o,to_store); //problem?  //////////////////////////77
-            break;
+            if(distance==o->first)
+            {
+              bool doit=false;
+              //was ist, wenn gleich!?:
+
+              if(o->second[0]!=to_store.second[0]){ //good to compare
+                if(o->second[0]>to_store.second[0])
+                {
+                  doit=true;
+                }
+              }else if(o->second[1]!=to_store.second[1]){
+                if(o->second[1]>to_store.second[1])
+                {
+                  doit=true;
+                }
+              }else{  //same color is okay!
+                if(o->second[2]>to_store.second[2])
+                {
+                  doit=true;
+                }
+              }
+
+              if(doit)
+              {
+                inserted=1;
+                v_out.insert(o,to_store); //problem?  //////////////////////////77
+                break;
+              }
+            }else{
+              inserted=1;
+              v_out.insert(o,to_store); //problem?  //////////////////////////77
+              break;
+            }
+
           }
         }
 
@@ -97,6 +224,7 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
     --la;
     farest=la->first;
     //find sort in the 4 boxes
+    //std::cout<<"pop "<<bboxes.begin()->second<<" \n";
     bboxes.pop_front();
     for(int i=0; i<4;i++)
     {
@@ -109,36 +237,48 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
       //check if i is in range
       if(i==0){//drüber
         new_box=n-X;
+
         if(new_box<0)
         {
           skip=true;
-        }else{
+        }
+        /*
+        else{
           //N=x*X/width+X*(y*Y/height);
-          n_d=std::abs(y-(n/X)*(SIZEY/Y));
+          n_d=std::abs(y-(n/X)*(SIZEY/Y));  //opt: mid
+          //opt: right
+          //opt: left
           //std::cout<<"oben: "<<n_d<<"\n";
         }
+        */
       }else if(i==1)//rechts
       {
         new_box=n+1;
+
         //std::cout<<((int) (n/X))<<" "<<((int) (new_box/X))<<"\n";
         if((new_box>=X*Y)|(((int) (n/X))!=((int) (new_box/X))))
         {
           skip=true;
-        }else{
-          n_d=std::abs((new_box%X)*(SIZEX/X)-x);
+        }
+        /*else{
+
           //std::cout<<"rechts: "<<n_d<<"\n";
         }
+      */
       }else if(i==2)//unten
       {
         new_box=n+X;
         if(new_box>=X*Y)
         {
           skip=true;
-        }else{
+        }
+        /*else{
           //N=x*X/width+X*(y*Y/height);
-          n_d=std::abs((new_box/X)*(SIZEY/Y)-y);
+          n_d=std::abs(y-(n/X)*(SIZEY/Y));  //opt: mid drüber
+          n_d=std::abs((new_box/X)*(SIZEY/Y)-y); //drunter
         //  std::cout<<"untenn: "<<n_d<<"\n";
         }
+        */
       }else if(i==3)//links
       {
         new_box=n-1;
@@ -147,12 +287,16 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
         {
           skip=true;
         }
+      }
+        /*
       }else{
-        n_d=std::abs(x-(n%X)*(SIZEX/X));
+      n_d=std::abs((new_box%X)*(SIZEX/X)-x); rehcts
+      n_d=std::abs(x-(n%X)*(SIZEX/X)); links
        //std::cout<<"links: "<<n_d<<"\n";
       }
+      */
 
-    //  std::cout<<"from"<<n<<"to "<<new_box<<"und "<<skip<<"\n";
+
 
       for(std::vector<int>::iterator p = visited.begin(); p != visited.end(); ++p) {
         if(new_box==*p)
@@ -163,7 +307,17 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
         }
       }
 
+
       if(!skip){
+        visited.push_back(new_box);
+
+        n_d=closest_dist(x,y,first_box,new_box);
+        if(info)
+        {
+          std::cout<<"from"<<n<<"to "<<new_box<<"und "<<skip<<"\n";
+          std::cout<<n_d<<" disttopix\n";
+        }
+
         std::pair<double,int> box=std::pair<double,int>(n_d,new_box);
         bool inserted=0;
 
@@ -197,6 +351,7 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
   //  std::cout<<"sizllllllllllllllllllllllllllllllllllllllllllll:"<<bboxes.size()<<"\n";
   }
 }
+//std::cout<<cnt<<"cnt\n";
 
   if(v_out.size()!=count)
   {
@@ -207,8 +362,24 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
 
 int main(int argc, char** argv )
 {
+
+/* to check xy_to_N()
+  X=50;
+  Y=50;//vs 7
+  //28 27 28.5
+  SIZEX=500;
+  SIZEY=500;
+
+  for (int i=0; i<500; i++)
+  {
+    int N= xy_to_N(500-i,i,SIZEX,SIZEY,X,Y);
+    std::cout<<i<<" N:"<<N<<"\n";
+  }
+  */
+
 //CHECK_INPUT:
     //CHECK LENGTH
+
       const clock_t begin_time = clock();
     if ( argc != 4 )//|| argc != 4)
     {
@@ -314,11 +485,16 @@ int main(int argc, char** argv )
 //"
         //std::cout<<"here"<<samples[10][10].x<<"\n";
         //vlt. kann man folgende schleife irgendwie in die erste rienziehen um durchläufe zu sparen?
+
         for(int x=0; x<SIZEX; x++)
         {
           for(int y=0; y<SIZEY; y++)
           {
-            if(!check_pic.at<Vec3b>(Point(x,y))[0])
+
+            //int x= 10;
+            //int y= 10;
+
+            if(!check_pic.at<Vec3b>(Point(x,y))[0]) // if value 100
             {//not sampled!
               std::cout<<"x "<<x<<" y "<<y<<"\n";
 
@@ -328,11 +504,17 @@ int main(int argc, char** argv )
               std::list<std::pair<double,Vec3b> >  nec_points; //distance,color
               //calc sum and get <count> closest points:
               int n=xy_to_N(x, y, SIZEX, SIZEY, X, Y);
+              //std::cout<<n<<"N\n";
               closest_points(samples, x, y,n, count, nec_points);
+              if(count!=nec_points.size())
+              {
+                std::cout<<"heree\n";
+              }
               if(count==1)  //we dont want to divide by zero!
               {
+                //only closest:
                 output.at<Vec3b>(Point(x,y))=nec_points.begin()->second;//floor(r+0.5);
-              }else{
+              }else{//to check!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 //afterwards, calc sum!
                 for(std::list<std::pair<double,Vec3b> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   sum+=p->first;
@@ -356,15 +538,26 @@ int main(int argc, char** argv )
                   g+=p->second[1]*std::pow((sum-p->first),power)/(faktor);
                   b+=p->second[2]*std::pow((sum-p->first),power)/(faktor);
                 }
+
                 //std::cout<<"faktor: "<<faktor<<"\n";
                 //std::cout<<"check:=1?=  "<<check<<"\n";
+                if(info)
+                {
+                  std::cout<<r<<"r\n";
+                  std::cout<<g<<"g\n";
+                  std::cout<<b<<"b\n";
+                }
+
                 output.at<Vec3b>(Point(x,y))[0]=r;//floor(r+0.5);
                 output.at<Vec3b>(Point(x,y))[1]=g;//floor(g+0.5);
                 output.at<Vec3b>(Point(x,y))[2]=b;//floor(b+0.5);
               }
             }
+
           }
         }
+
+
         if(samples.size()<count)
         {
           std::cout<<"samples_count<influencin points\n";
@@ -373,6 +566,8 @@ int main(int argc, char** argv )
         //std::cout <<"done\n";
         std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
 
+
         return 0;
   }
+
 }
