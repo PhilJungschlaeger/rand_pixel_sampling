@@ -10,8 +10,8 @@
 
 //bucketing:
 //chose X and Y as natural divider of the resolution!
-int X=1;
-int Y=1;//vs 7
+int X=80; //80
+int Y=60;//60
 //28 27 28.5
 int SIZEX;
 int SIZEY;
