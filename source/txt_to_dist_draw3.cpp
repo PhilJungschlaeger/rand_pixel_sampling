@@ -8,7 +8,8 @@
 //#include <pair>
 //choose wise: 674x674calc
 
-
+//bucketing:
+//chose X and Y as natural divider of the resolution!
 int X=1;
 int Y=1;//vs 7
 //28 27 28.5
