@@ -5,388 +5,298 @@
 #include "pixel.hpp"
 #include <math.h>
 #include <vector>
-//#include <pair>
-//choose wise: 674x674calc
 
-//bucketing:
-//chose X and Y as natural divider of the resolution!
-int X=80; //80
-int Y=60;//60
-//28 27 28.5
+using namespace cv;
+/*
+txt_to_dist_draw:
+this program reads and draws random pixels/samples from a txt like file to a picture of
+its original solution. All the missing pixels are interpolated, according to their
+proximity, to the -count- closest sampled pixels, with the influence of a power(linear, square, 3,..).
+
+example:
+./program_name (String)txt_file (int)number_of_influencing_points (int)power_of_distance_to_influence
+########################
+todo:
+-best bucketamount function! X,Y=f(width,height,samples,number_of_influencing_points)
+-allow bucketamounts, that are not integer dividents
+  ->closest_dist() muss überarbeitet werden!
+-a full error analysis
+*/
+
+//BUCKETS
+  //chose X and Y as natural divider of the resolution!
+int X=80;
+int Y=60;
+
+//RESOLTUION
 int SIZEX;
 int SIZEY;
 
-bool info=false;
-
-//allow any function
-using namespace cv;
-int xy_to_N(int x, int y, int width, int height, int X, int Y)
-{//grob getestet!
+/*
+calcs a pixel(x,y)'s bucket N
+*/
+int xy_to_N(int x, int y)
+{
   int N;
   N=std::floor((double)x*((double)X/((double)SIZEX)))+X*std::floor(((double)y*((double)Y/((double)SIZEY))));
-  //N=std::floor((x*X/(SIZEX))+std::floor(X*(y*(Y/(SIZEY))))); falsch
-
-  if(info)
-  {
-      std::cout<<N<<" "<<X/SIZEX<<" \n";
-  }
-
   return N;
 }
 
+/*
+distance, between two pixels
+*/
 double dist(int x1, int x2, int y1, int y2)
 {
-  double distance=sqrt(std::pow((double)x1-x2,2)+std::pow((double)y1-y2,2)); //pow: nur pythagoras!!!
-  if(info)
-  {
-    std::cout<<x1-x2<<" "<<y1-y2<<" "<<distance<<" asifdsa\n";
-  }
-
+  double distance;
+  distance=sqrt(std::pow((double)x1-x2,2)+std::pow((double)y1-y2,2)); //pow: nur pythagoras!!!
   return distance;
 }
 
-//double!=!?!?!?
+/*
+calculates the closest distance of a pixel, from a box n, to a new box n_new
+*/
 double closest_dist(int x, int y, int n, int n_new)
 {
   double n_d;
   if(n%X==n_new%X)  //gleiche spalte
   {
-    //std::cout<<"gl. spalte!\n";
     if(n>n_new) //drüber
     {
-      n_d=std::abs((((n_new+X)/X)*((double)SIZEY/((double)Y)))-y);      //check
-
-      //std::cout<<"dr: "<<(n_new+X)/X<<" "<<(SIZEY/Y)<<" \n";
+      n_d=std::abs((((n_new+X)/X)*((double)SIZEY/((double)Y)))-y);
     }else{      //drunter
-
-      //2/2 * (20/2) -0
-      n_d=std::abs(((n_new/X)*((double)SIZEY/((double)Y)))-y);     //check
+      n_d=std::abs(((n_new/X)*((double)SIZEY/((double)Y)))-y);
     }
   }else if(n/X==n_new/X) //gleiche reihe
   {
-    //std::cout<<"gl. reihe!\n";
     if(n<n_new) //rechts
     {
-      n_d=std::abs((n_new%X)*((double)SIZEX/((double)X))-x);    //check
-
+      n_d=std::abs((n_new%X)*((double)SIZEX/((double)X))-x);
     }else{      //links
-      n_d=std::abs(x-(((n_new+1)%X)*((double)SIZEX/((double)X)))); //check
+      n_d=std::abs(x-(((n_new+1)%X)*((double)SIZEX/((double)X))));
     }
   }else if(n%X<n_new%X)//rechts liegend
   {
     if(n/X>n_new/X) //oberhlab
     {
-      //punkt: linksunten
-      //std::cout<<"br: linksunt!\n";
-      int x_n=(n_new%X)*(SIZEX/X);      //wasist mit krummen pixeln!? -> nur passend, erstmal!!!!!!!!!!!!!!
+      //closest-point: linksunten
+      int x_n=(n_new%X)*(SIZEX/X);
       int y_n=((n_new/X)+1)*(SIZEY/Y);
       n_d=dist(x,x_n,y, y_n);
     }else{          //unterhalb
-      //punkt: links oben
-
+      //closest-point: links oben
       int x_n=(n_new%X)*(SIZEX/X);
       int y_n=(n_new/X)*(SIZEY/Y);
-      //std::cout<<"br: linksoben!:"<<x_n<<" "<<y_n<<"\n";
       n_d=dist(x,x_n,y, y_n);
     }
-
   }else{  //links liegend
     if(n/X>n_new/X) //oberhlab
     {
-      //punkt: rechtsunten:
-    //  std::cout<<"br: rechtsunt!\n";
+      //closest-point: rechtsunten:
       int x_n=((n_new%X)+1)*(SIZEX/X);
       int y_n=((n_new/X)+1)*(SIZEY/Y);
       n_d=dist(x,x_n,y, y_n);
     }else{          //unterhalb
-      //punkt: rechts oben
-      //std::cout<<"br: rechtsoben\n";
+      //closest-point: rechts oben
       int x_n=((n_new%X)+1)*(SIZEX/X);
       int y_n=((n_new/X))*(SIZEY/Y);
       n_d=dist(x,x_n,y, y_n);
     }
   }
-  if(n_d>1){//for safety reasons
+
+  if(n_d>1){//for safety reasons...lieber nen bucket zu viel besuchen.
     n_d-=1; //nötig?
   }
   return n_d;
 }
 
-/////////////////////////////////////////////////////////////!!
-//: pair benutzen und nur zwischenspeichern, was wirkich wichtig ist!
-// in der höheren ebene drüberusmieren!
-void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n, int& count, std::list<std::pair<double,Vec3b> > & v_out)
+/*
+check_bucket() sorts all count-closest points of v_in towards Pixel(x,y)
+in v_out!
+*/
+
+void check_bucket(int x, int y, std::vector<Pixel> & v_in, std::list<std::pair<double,Vec3b> > & v_out, int& count)
 {
-  int first_box=n;
-  std::list<std::pair<double,int> > bboxes;
-  bboxes.push_back(std::pair<double,int>(0.0,n));
-  std::vector<int> visited; //maybe change name.. stores buckets, that are/wer to be visited
-  double farest=99999999;//infinity?
-  //es gibt noch boxen?, die nähste box ist näher als der entfernteste, wir haben noch nicht genug
-  int cnt=0;
-  visited.push_back(n);
-
-  while((bboxes.size()))
-  {
-    //std::cout<<bboxes.size()<<" size\n";
-    //std::cout<<farest<<" far\n";
-    if(((farest>=bboxes.begin()->first)|(v_out.size()<count)))
+  for(int p = 0; p < v_in.size(); ++p) {
+    double distance=dist(v_in[p].x,x,v_in[p].y,y);  //distance of new pixel
+    std::pair<double,Vec3b> to_store(distance,v_in[p].color);
+    if(v_out.size())  //if v_out has already samples:
     {
-
-
-
-    n=bboxes.begin()->second;
-    if(info)
-    {
-      std::cout<<cnt<<" cnt: "<<n<<".....................\n";
-    }
-
-
-
-
-
-    //erstmal box checken:
-    //kann mit einer liste vielleicht schöner/effizienter sein? oder einem cleveren vector sort..?
-
-    for(int p = 0; p < v_in[n].size(); ++p) {    //  N-steps
-    //  std::cout<<"here"<<n<<"d"<<p<<"\n";
-    //  std::cout<<v_in[n][p].x<<"\n";
-      double distance=dist(v_in[n][p].x,x,v_in[n][p].y,y);  //distance of new pixel
-
-      std::pair<double,Vec3b> to_store(distance,v_in[n][p].color);
-
-      if(v_out.size())
-      {//der vektor hat schon inhalt:
-        bool inserted=0;
-
-        //lieber normale for-schleife? und dann checken, ob kleiner als count ist..
-        for(std::list<std::pair<double,Vec3b> >::iterator o = v_out.begin(); o != v_out.end(); ++o) {
-
-          //achtung mehrdeutigkeit: wenn zwei pixel gleichweit entfernt sind.. welcher wird als n
-          //nöchster in betracht gezogen?!?
-          if(distance<=o->first) //sobald kleiner, inserten! noch verbessrern?
+      bool inserted=0;  //for later check
+      for(std::list<std::pair<double,Vec3b> >::iterator o = v_out.begin(); o != v_out.end(); ++o) {
+        //achtung mehrdeutigkeit: wenn zwei pixel gleichweit entfernt sind.. welcher wird als n
+        //nächster in betracht gezogen?!?
+        bool doit=false;
+        if(distance<=o->first)
+        {
+          if(distance==o->first)  //achtun mehrdeutigkeit
           {
-            if(distance==o->first)
-            {
-              bool doit=false;
-              //was ist, wenn gleich!?:
-
-              if(o->second[0]!=to_store.second[0]){ //good to compare
-                if(o->second[0]>to_store.second[0])
-                {
-                  doit=true;
-                }
-              }else if(o->second[1]!=to_store.second[1]){
-                if(o->second[1]>to_store.second[1])
-                {
-                  doit=true;
-                }
-              }else{  //same color is okay!
-                if(o->second[2]>to_store.second[2])
-                {
-                  doit=true;
-                }
-              }
-
-              if(doit)
+            if(o->second[0]!=to_store.second[0]){
+              if(o->second[0]>to_store.second[0])
               {
-                inserted=1;
-                v_out.insert(o,to_store); //problem?  //////////////////////////77
-                break;
+                doit=true;
               }
-            }else{
-              inserted=1;
-              v_out.insert(o,to_store); //problem?  //////////////////////////77
-              break;
+            }else if(o->second[1]!=to_store.second[1]){
+              if(o->second[1]>to_store.second[1])
+              {
+                doit=true;
+              }
+            }else{  //same color is okay!
+              if(o->second[2]>to_store.second[2])
+              {
+                doit=true;
+              }
             }
 
+
+          }else{  //echt kleiner
+            doit=true;
+          }
+          if(doit)
+          {
+            inserted=1;
+            v_out.insert(o,to_store); //problem?  //////////////////////////77
+            break;
           }
         }
+      }
 
-        if(inserted==0&&v_out.size()<count)
-        {
-          v_out.push_back(to_store);
-        }
-
-      }else{
-        //der vektor ist noch leer:
+      if((inserted==0)&&(v_out.size()<count)) //not inserted, but still not enough smaples.
+      {
         v_out.push_back(to_store);
       }
-
-
-      if(v_out.size()>count) //das kürzen könnte man durhc vorherige clevernheit weglassen
-      {
-        v_out.pop_back();
-      }
-
+    }else{  //always store first sample!:
+      v_out.push_back(to_store);
     }
-  //  std::cout<<"here\n";
-    std::list<std::pair<double,Vec3b> >::iterator la=v_out.end();
-    --la;
-    farest=la->first;
-    //find sort in the 4 boxes
-    //std::cout<<"pop "<<bboxes.begin()->second<<" \n";
-    bboxes.pop_front();
-    for(int i=0; i<4;i++)
+
+    if(v_out.size()>count) //liste zu groß?
     {
-      std::pair<double,int> box;
-      int new_box;
-
-      double n_d;
-
-      bool skip=false;
-      //check if i is in range
-      if(i==0){//drüber
-        new_box=n-X;
-
-        if(new_box<0)
-        {
-          skip=true;
-        }
-        /*
-        else{
-          //N=x*X/width+X*(y*Y/height);
-          n_d=std::abs(y-(n/X)*(SIZEY/Y));  //opt: mid
-          //opt: right
-          //opt: left
-          //std::cout<<"oben: "<<n_d<<"\n";
-        }
-        */
-      }else if(i==1)//rechts
-      {
-        new_box=n+1;
-
-        //std::cout<<((int) (n/X))<<" "<<((int) (new_box/X))<<"\n";
-        if((new_box>=X*Y)|(((int) (n/X))!=((int) (new_box/X))))
-        {
-          skip=true;
-        }
-        /*else{
-
-          //std::cout<<"rechts: "<<n_d<<"\n";
-        }
-      */
-      }else if(i==2)//unten
-      {
-        new_box=n+X;
-        if(new_box>=X*Y)
-        {
-          skip=true;
-        }
-        /*else{
-          //N=x*X/width+X*(y*Y/height);
-          n_d=std::abs(y-(n/X)*(SIZEY/Y));  //opt: mid drüber
-          n_d=std::abs((new_box/X)*(SIZEY/Y)-y); //drunter
-        //  std::cout<<"untenn: "<<n_d<<"\n";
-        }
-        */
-      }else if(i==3)//links
-      {
-        new_box=n-1;
-
-        if((new_box<0)|(((int) (n/X))!=((int) (new_box/X))))
-        {
-          skip=true;
-        }
-      }
-        /*
-      }else{
-      n_d=std::abs((new_box%X)*(SIZEX/X)-x); rehcts
-      n_d=std::abs(x-(n%X)*(SIZEX/X)); links
-       //std::cout<<"links: "<<n_d<<"\n";
-      }
-      */
-
-
-
-      for(std::vector<int>::iterator p = visited.begin(); p != visited.end(); ++p) {
-        if(new_box==*p)
-        {
-        //  std::cout<<"visited\n";
-          skip=true;
-          break;
-        }
-      }
-
-
-      if(!skip){
-        visited.push_back(new_box);
-
-        n_d=closest_dist(x,y,first_box,new_box);
-        if(info)
-        {
-          std::cout<<"from"<<n<<"to "<<new_box<<"und "<<skip<<"\n";
-          std::cout<<n_d<<" disttopix\n";
-        }
-
-        std::pair<double,int> box=std::pair<double,int>(n_d,new_box);
-        bool inserted=0;
-
-        if(bboxes.size())
-        {
-          for(std::list<std::pair<double,int> >::iterator o = bboxes.begin(); o != bboxes.end(); ++o)
-          {
-            if(o->first>box.first)
-             {
-               inserted=1;
-               bboxes.insert(o,box); //problem?  //////////////////////////77
-               break;
-             }
-          }
-          if(inserted==0)
-          {
-            bboxes.push_back(box);
-          }
-        }else
-        {
-          bboxes.push_back(box);
-        }
-      }
+      v_out.pop_back();
     }
-//  std::cout<<"bbsize"<<bboxes.size()<<"far: "<<farest<<"<?"<<bboxes.begin()->first<<"voutsiz: "<<v_out.size()<<"\n";
-
-    cnt++;
-  }else{
-  //  std::cout<<"clear:\n";
-    bboxes.clear();
-  //  std::cout<<"sizllllllllllllllllllllllllllllllllllllllllllll:"<<bboxes.size()<<"\n";
   }
 }
-//std::cout<<cnt<<"cnt\n";
 
-  if(v_out.size()!=count)
-  {
-    std::cout<<"size?: "<<v_out.size()<<"\n";
+//////////////////////////////////////
+/*
+ermittelt für einen pixel x,y, die count-viele nächste sample-punkte(aus v_in)
+und übergibt einen vektor per referenz mit deren entfernungen und farben.
+(dank bucket-system ist das ganze etwas unübersichtlich, aber effizient.)
+*/
+void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n, int& count, std::list<std::pair<double,Vec3b> > & v_out)
+{
+  int first_box=n;                                  //to save the origin-box
+  std::list<std::pair<double,int> > sorted_buckets; //to stores buckets sorted, that might to be noted_boxes
+  std::vector<int> noted_boxes;                     //stores already noted_boxes
+
+  //origin-box:
+  sorted_buckets.push_back(std::pair<double,int>(0.0,n));
+  noted_boxes.push_back(n);
+  double farest=99999999;                           //should be changed to infinity?
+
+  while((sorted_buckets.size()))  //-as long, as there are buckets, to be visited left
+  {                               //-farest-sample is farrer than closest-bucket
+                                  //-or if we haven't found enough samples in the previous
+                                  //  buckets?
+    if(((farest>=sorted_buckets.begin()->first)|(v_out.size()<count)))
+    {
+      n=sorted_buckets.begin()->second; //take closest bucket
+      check_bucket(x, y, v_in[n], v_out, count);//only vec, no: n, v_in
+
+      std::list<std::pair<double,Vec3b> >::iterator la=v_out.end();
+      --la; //bessere lösung?
+      farest=la->first;
+      sorted_buckets.pop_front(); //kick just visited bucket fronm list
+
+      //find new buckets(4 are maximum possible):
+      for(int i=0; i<4;i++) //
+      {
+        std::pair<double,int> box;//new bucket
+        int new_box;              //new n
+        double n_d;               //distance to n
+
+        bool skip=false;          //check if box is necessary
+
+        if(i==0){//bucket over last bucket
+          new_box=n-X;
+          if(new_box<0) //out of image
+          {
+            skip=true;
+          }
+        }else if(i==1)//bucket right-next to last bucket
+        {
+          new_box=n+1;
+          if((new_box>=X*Y)|(((int) (n/X))!=((int) (new_box/X))))
+          {
+            skip=true;
+          }
+        }else if(i==2)//bucket under last bucket
+        {
+          new_box=n+X;
+          if(new_box>=X*Y)
+          {
+            skip=true;
+          }
+        }else if(i==3)//bucket left-next to last bucket
+        {
+          new_box=n-1;
+          if((new_box<0)|(((int) (n/X))!=((int) (new_box/X))))
+          {
+            skip=true;
+          }
+        }
+
+        //is new bucket already noted?:
+        for(std::vector<int>::iterator p = noted_boxes.begin(); p != noted_boxes.end(); ++p) {
+          if(new_box==*p)
+          {
+            skip=true;
+            break;
+          }
+        }
+
+        if(!skip){//take new bucket:
+
+          noted_boxes.push_back(new_box);           //note bucket
+          n_d=closest_dist(x,y,first_box,new_box);  //calc closest distance from pixel(x,y) to bucket
+          std::pair<double,int> box=std::pair<double,int>(n_d,new_box); //the new bucket
+
+          bool inserted=0;
+          if(sorted_buckets.size()) //sort bucket into list of to be visited buckets:..
+          {
+            for(std::list<std::pair<double,int> >::iterator o = sorted_buckets.begin(); o != sorted_buckets.end(); ++o)
+            {
+              if(o->first>box.first)
+               {
+                 inserted=1;
+                 sorted_buckets.insert(o,box);
+                 break;
+               }
+            }
+            if(inserted==0)
+            {
+              sorted_buckets.push_back(box);
+            }
+          }else
+          {
+            sorted_buckets.push_back(box);
+          }
+        }
+      }
+    }else //we want to leave while-loop:
+    {
+      sorted_buckets.clear();
+    }
   }
-
 }
 
 int main(int argc, char** argv )
 {
-
-/* to check xy_to_N()
-  X=50;
-  Y=50;//vs 7
-  //28 27 28.5
-  SIZEX=500;
-  SIZEY=500;
-
-  for (int i=0; i<500; i++)
-  {
-    int N= xy_to_N(500-i,i,SIZEX,SIZEY,X,Y);
-    std::cout<<i<<" N:"<<N<<"\n";
-  }
-  */
-
-//CHECK_INPUT:
-    //CHECK LENGTH
-
-      const clock_t begin_time = clock();
+//INPUT-CHECK:
+    const clock_t begin_time = clock(); //for time measurement
     if ( argc != 4 )//|| argc != 4)
     {
-      std::cout<<"fnumber of param wrongr\n";
-        return -1;
-
+      std::cout<<"fnumber of param wrong\n";
+      //USAGE?
+      return -1;
     }
 
 		std::string input= argv[1]; //file input
@@ -403,29 +313,24 @@ int main(int argc, char** argv )
       return -1;
     }
 
+//-...........................................
 //MAIN:
-
-    std::string line;
-    std::ifstream myfile(argv[1]);
-
-
-  //  std::vector<Pixel> samples; //vector with all samples
+    //Prepare Buckets
     std::vector<std::vector<Pixel> > samples; //buckets
     for(int x=0; x<X; x++)
     {
       for(int y=0; y<Y; y++)
       {
         std::vector<Pixel> vec;
-      //  std::cout<<"here"<<vec.size()<<"\n";
         samples.push_back(vec);
       }
     }
-    //std::vector<Pixel> not_sampled;
-    //std::cout<<"here"<<samples[1].size()<<"\n";
+
+//READ INPUT
+    std::string line;
+    std::ifstream myfile(argv[1]);
     if (myfile.is_open())
     {
-      //READ:
-      //-...........................................
         std::cout <<"open file" <<"\n";
         getline(myfile,line);
         std::stringstream meta;
@@ -434,8 +339,10 @@ int main(int argc, char** argv )
         meta>>SIZEX;
         meta>>SIZEY;
 
-        Mat output(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));
-        Mat check_pic(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));
+        Mat output(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));   //output-image
+        Mat check_pic(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));//easy-trick, to remember, which pixel is sampled
+                                                            //might be changed to a 2D array of booleans?
+
         while (getline(myfile,line))  //read whole input data:
         {
           std::stringstream ss;
@@ -446,7 +353,7 @@ int main(int argc, char** argv )
           //Coordinat/Pixel:
           int x;
           int y;
-          ss>>x;              //First Word in
+          ss>>x;
           ss>>y;
 
           //Color:
@@ -464,111 +371,76 @@ int main(int argc, char** argv )
           pix.color[1]=g;
           pix.color[2]=b;
 
-          //store:  //for later use
-          N=xy_to_N(x, y, SIZEX, SIZEY, X, Y);
-          samples[N].push_back(pix);  //sort in bucket!
+          N=xy_to_N(x, y);  //get bucket
+          samples[N].push_back(pix);            //store in bucket!
+
           //draw color to ouput:
           output.at<Vec3b>(Point(x,y))[0]=r;
           output.at<Vec3b>(Point(x,y))[1]=g;
           output.at<Vec3b>(Point(x,y))[2]=b;
+
           //for later check:
           check_pic.at<Vec3b>(Point(x,y))[0]=100; //already sampled
         }
         myfile.close();
         std::cout<<"samples are ready!\n";
-
-        //std::cout<<"here"<<samples[0].size()<<"\n";
 //-...........................................
 
 //PROCESS DATA:
-//-...........................................
-
-//"
-        //std::cout<<"here"<<samples[10][10].x<<"\n";
-        //vlt. kann man folgende schleife irgendwie in die erste rienziehen um durchläufe zu sparen?
-
         for(int x=0; x<SIZEX; x++)
         {
           for(int y=0; y<SIZEY; y++)
           {
-
-            //int x= 10;
-            //int y= 10;
-
-            if(!check_pic.at<Vec3b>(Point(x,y))[0]) // if value 100
-            {//not sampled!
+            if(!check_pic.at<Vec3b>(Point(x,y))[0]) // if not allready sampled:
+            {
               std::cout<<"x "<<x<<" y "<<y<<"\n";
+              int n=xy_to_N(x, y);
 
-              int sum=0;
-              double faktor=0.0;
-              double check=0;
-              std::list<std::pair<double,Vec3b> >  nec_points; //distance,color
-              //calc sum and get <count> closest points:
-              int n=xy_to_N(x, y, SIZEX, SIZEY, X, Y);
-              //std::cout<<n<<"N\n";
-              closest_points(samples, x, y,n, count, nec_points);
-              if(count!=nec_points.size())
-              {
-                std::cout<<"heree\n";
-              }
-              if(count==1)  //we dont want to divide by zero!
+              std::list<std::pair<double,Vec3b> >  nec_points;    //neccesseray points
+              closest_points(samples, x, y,n, count, nec_points); //get closest_points
+              if(count==1)  //specialcas: we dont want to divide by zero!
               {
                 //only closest:
                 output.at<Vec3b>(Point(x,y))=nec_points.begin()->second;//floor(r+0.5);
-              }else{//to check!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                //afterwards, calc sum!
+              }else{
+
+                //sum of distances:
+                int sum=0;
                 for(std::list<std::pair<double,Vec3b> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   sum+=p->first;
                 }
 
-                //calculate faktor:
+                //calculate faktor: //to ensure, that each pixel has 100% intensity
+                double faktor=0.0;
                 for(std::list<std::pair<double,Vec3b> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   double dist= p->first;
                   faktor+=std::pow((sum-dist),power);
                 }
 
-                //calculate color using pixels, distances, and faktor
+                //calc color:
                 float r=0;
                 float g=0;
                 float b=0;
 
                 for(std::list<std::pair<double,Vec3b> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
-                  check+=std::pow((sum-p->first),power)/faktor;
-
                   r+=p->second[0]*std::pow((sum-p->first),power)/(faktor);
                   g+=p->second[1]*std::pow((sum-p->first),power)/(faktor);
                   b+=p->second[2]*std::pow((sum-p->first),power)/(faktor);
                 }
 
-                //std::cout<<"faktor: "<<faktor<<"\n";
-                //std::cout<<"check:=1?=  "<<check<<"\n";
-                if(info)
-                {
-                  std::cout<<r<<"r\n";
-                  std::cout<<g<<"g\n";
-                  std::cout<<b<<"b\n";
-                }
-
-                output.at<Vec3b>(Point(x,y))[0]=r;//floor(r+0.5);
-                output.at<Vec3b>(Point(x,y))[1]=g;//floor(g+0.5);
-                output.at<Vec3b>(Point(x,y))[2]=b;//floor(b+0.5);
+                output.at<Vec3b>(Point(x,y))[0]=r;
+                output.at<Vec3b>(Point(x,y))[1]=g;
+                output.at<Vec3b>(Point(x,y))[2]=b;
               }
             }
-
           }
         }
-
-
+        imwrite( "output_dist_interpretation.jpg", output );
+        std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
         if(samples.size()<count)
         {
           std::cout<<"samples_count<influencin points\n";
         }
-        imwrite( "output_dist_interpretation.jpg", output );
-        //std::cout <<"done\n";
-        std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
-
-
-        return 0;
-  }
-
+      }
+      return 0;
 }
