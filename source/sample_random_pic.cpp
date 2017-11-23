@@ -1,3 +1,7 @@
+
+
+
+//////////////////////////////////////////////////////////////
 /*
 info:
   random_sampling_storing.cpp simply resamples a given input picture with a wished
@@ -40,6 +44,38 @@ void usage(){
   std::cout<<"----------------------------------------------------------------\n";
 }
 
+void mat_to_rand_txt(Mat& image, int samples_amount,  std::string output_name)
+{
+  srand(time(NULL));  //SEED
+  int SIZEX=image.cols;
+  int SIZEY=image.rows;
+
+  Pixel pix;
+  Vec3b color;
+  RsfWriter writer_rand(output_name, SIZEX, SIZEY);    //will be wrting our pixel
+
+  //take samples:
+  std::cout<<"now sampling..";
+  const clock_t begin_time = clock();
+  for (int i=0; i<samples_amount; i++)
+  {
+    pix.x= rand() % SIZEX;
+    pix.y= rand() % SIZEY;
+    pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
+    if(!writer_rand.exists(pix))  //no doubles please!
+    {
+      writer_rand.add(pix);
+    }else{
+      i--;
+    }
+  }
+
+  std::cout<<"done\nnow storing..";
+  writer_rand.save();
+  std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
+
+}
+
 int main(int argc, char** argv )
 {
 //CHECK_INPUT:
@@ -71,34 +107,8 @@ int main(int argc, char** argv )
 			return -1;
 		}
 
+    std::string output_name="output_name.txt";
+    mat_to_rand_txt(image, samples_amount, output_name);
 //MAIN:
-		srand(time(NULL));  //SEED
-		int SIZEX=image.cols;
-		int SIZEY=image.rows;
-
-    Pixel pix;
-		Vec3b color;
-    std::string output_rand="output_rand.txt";
-    RsfWriter writer_rand(output_rand, SIZEX, SIZEY);    //will be wrting our pixel
-
-    //take samples:
-    std::cout<<"now sampling..";
-    const clock_t begin_time = clock();
-		for (int i=0; i<samples_amount; i++)
-		{
-      pix.x= rand() % SIZEX;
-		  pix.y= rand() % SIZEY;
-			pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
-      if(!writer_rand.exists(pix))  //no doubles please!
-      {
-        writer_rand.add(pix);
-      }else{
-        i--;
-      }
-		}
-
-    std::cout<<"done\nnow storing..";
-    writer_rand.save();
-    std::cout <<"done\ntook:"<<(float( clock () - begin_time )/  CLOCKS_PER_SEC)<<"seconds in total\n";
-    return 0;
+		return 0;
 }
