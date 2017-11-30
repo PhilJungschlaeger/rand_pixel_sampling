@@ -56,17 +56,36 @@ void mat_to_rand_txt(Mat& image, int samples_amount,  std::string const& output_
   //take samples:
   std::cout<<"now sampling..";
   const clock_t begin_time = clock();
+  //std::list<std::pair<int, int> > not_sampled_yet;
+  std::vector<std::pair<int, int> > not_sampled_yet;
+  for(int x=0; x<SIZEX; x++)
+  {
+    for(int y=0; y<SIZEY; y++)
+    {
+      not_sampled_yet.push_back(std::pair<int,int>(x,y));
+    }
+  }
+
   for (int i=0; i<samples_amount; i++)
   {
-    pix.x= rand() % SIZEX;
-    pix.y= rand() % SIZEY;
+    
+    int n= rand()% not_sampled_yet.size();
+    //std::cout<<n<<"\n";
+    //std::list<std::pair<int,int> >::iterator it = not_sampled_yet.begin();
+    /*
+    std::advance(it, n);
+    pix.x= it->first;
+    pix.y= it->second;
+    */
+    pix.x= not_sampled_yet[n].first;
+    pix.y= not_sampled_yet[n].second;
     pix.color = image.at<Vec3b>(Point(pix.x,pix.y));
-    if(!writer_rand.exists(pix))  //no doubles please!
-    {
-      writer_rand.add(pix);
-    }else{
-      i--;
-    }
+    writer_rand.add(pix);
+    //https://stackoverflow.com/questions/3487717/erasing-multiple-objects-from-a-stdvector
+    //i am not sure, wether this is quite allright, but it is fast!:
+    not_sampled_yet[n]=not_sampled_yet.back();
+    not_sampled_yet.pop_back();
+  //  not_sampled_yet.erase(not_sampled_yet.begin()+n);
   }
 
   std::cout<<"done\nnow storing..";
@@ -105,9 +124,10 @@ int main(int argc, char** argv )
     totalFrameNumber = capture.get(CV_CAP_PROP_FRAME_COUNT);
     srand(time(NULL));  //SEED
     cv::Mat currentFrame;
+
     for (unsigned int i = 0;i <totalFrameNumber; i++) {
       capture>>currentFrame;
-      std::cout<<"frame: "<<i<<"\n";
+      std::cout<<"frame: "<<i<<" of "<<totalFrameNumber<<"\n";
       if(!currentFrame.empty()){
         //i need to fix my stringlibrary...
         std::stringstream number;
@@ -115,7 +135,8 @@ int main(int argc, char** argv )
         std::string num;
         number>>num;
         //stringlibrary..
-        std::string output_name=std::string("output_")+ num+".txt";
+        std::string output_name=std::string("output ")+ num+" .txt";
+
         mat_to_rand_txt(currentFrame, samples_amount, output_name);
       }
     }

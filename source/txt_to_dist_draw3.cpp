@@ -25,8 +25,8 @@ todo:
 
 //BUCKETS
   //chose X and Y as natural divider of the resolution!
-int X=20; //von 540
-int Y=10; //von 360
+int X=160;//160;//320;//640; //von 540
+int Y=45;//45;//90;//180; //von 360
 
 //RESOLTUION
 int SIZEX;

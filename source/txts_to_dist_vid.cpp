@@ -16,13 +16,29 @@
 #include <math.h>
 #include <vector>
 
-int X=20; //von 540
-int Y=10; //von 360
+int X=160;//256; //von 540
+int Y=45; //von 360
 
 int SIZEX;
 int SIZEY;
 
 using namespace cv;
+bool wayToSort(std::string i, std::string j)
+{
+
+  int i_number = 0;
+  int j_number = 0;
+  std::string firstString= "";
+  std::string secondString="";
+
+  std::stringstream ss1(i);
+  ss1 >> firstString >> i_number;
+  std::stringstream ss2(j);
+  ss2 >> secondString >> j_number;
+  //std::cout << "firstInteger " << firstIntege
+  return i_number < j_number;
+ }
+
 void getdir (std::string dir, std::vector<std::string> &files)
 {
     DIR *dp;
@@ -35,15 +51,33 @@ void getdir (std::string dir, std::vector<std::string> &files)
     while ((dirp = readdir(dp)) != NULL) {
 
       std::stringstream ss;
-      ss << dir;
-      ss << dirp->d_name;
+      if((std::string(".")).compare(dirp->d_name)&&(std::string("..").compare(dirp->d_name)))
+      {
+        std::string ending= ".txt";
+        //.avi prohib
+        if (ending.size() > std::string(dirp->d_name).size()){
+        }else if(std::equal(ending.rbegin(),ending.rend(), std::string(dirp->d_name).rbegin()))
+        {
+          ss << dir;
+          ss << dirp->d_name;
+          std::string name;
+          name=ss.str();
+          files.push_back(name);
+        }else{
+          std::cout<<std::string(dirp->d_name)<<"\n";
+          std::cout<<"proh\n";
+        }
 
-      std::string name;
-      name=ss.str();
-      files.push_back(name);
+      }else{
+        std::cout<<"proh\n";
+      }
     }
     closedir(dp);
-    std::sort( files.begin(), files.end() );
+
+    std::sort( files.begin(), files.end(), wayToSort );
+
+    //files.erase(files.begin());
+    //files.erase(files.begin());
 }
 
 /*
@@ -205,11 +239,12 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
   sorted_buckets.push_back(std::pair<double,int>(0.0,n));
   noted_boxes.push_back(n);
   double farest=99999999;                           //should be changed to infinity?
-
+//std::cout<<"here\n";
   while((sorted_buckets.size()))  //-as long, as there are buckets, to be visited left
   {                               //-farest-sample is farrer than closest-bucket
                                   //-or if we haven't found enough samples in the previous
                                   //  buckets?
+
     if(((farest>=sorted_buckets.begin()->first)|(v_out.size()<count)))
     {
       n=sorted_buckets.begin()->second; //take closest bucket
@@ -299,12 +334,14 @@ void closest_points(std::vector<std::vector<Pixel> > & v_in, int x, int y, int n
     {
       sorted_buckets.clear();
     }
+    //noted_boxes.clear();
   }
 }
 
 Mat read_image(std::string file, int count, int power)
 {
   std::vector<std::vector<Pixel> > samples; //buckets
+  std::cout<<file<<"\n";
   for(int x=0; x<X; x++)
   {
     for(int y=0; y<Y; y++)
@@ -327,9 +364,9 @@ Mat read_image(std::string file, int count, int power)
       meta>>SIZEX;
       meta>>SIZEY;
 
-      Mat output(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));   //output-image
+      Mat output=Mat(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));   //output-image
       Mat check_pic(SIZEY, SIZEX, CV_8UC3, Scalar(0,0,0));//easy-trick, to remember, which pixel is sampled
-                                                          //might be changed to a 2D array of booleans?
+                                                    //might be changed to a 2D array of booleans?
 
       while (getline(myfile,line))  //read whole input data:
       {
@@ -379,13 +416,16 @@ Mat read_image(std::string file, int count, int power)
       {
         for(int y=0; y<SIZEY; y++)
         {
+          //std::cout<<"here?a\n";
           if(!check_pic.at<Vec3b>(Point(x,y))[0]) // if not allready sampled:
           {
+            //std::cout<<"here?b\n";
             //std::cout<<"x "<<x<<" y "<<y<<"\n";
             int n=xy_to_N(x, y);
 
             std::list<std::pair<double,Vec3b> >  nec_points;    //neccesseray points
             closest_points(samples, x, y,n, count, nec_points); //get closest_points
+            //std::cout<<"here?c\n";
             if(count==1)  //specialcas: we dont want to divide by zero!
             {
               //only closest:
@@ -419,10 +459,14 @@ Mat read_image(std::string file, int count, int power)
               output.at<Vec3b>(Point(x,y))[0]=r;
               output.at<Vec3b>(Point(x,y))[1]=g;
               output.at<Vec3b>(Point(x,y))[2]=b;
+              nec_points.clear();
             }
           }
         }
       }
+      //check_pic
+      //samples vector
+      check_pic.release();
       return(output);
     }
 
@@ -461,13 +505,25 @@ int main(int argc, char** argv )
     getdir(argv[1],files);
     //clock_t begin_time = clock();
 
-    Size frameSize(static_cast<int>(640), static_cast<int>(360));
-    VideoWriter oVideoWriter ("./output.avi", CV_FOURCC('P','I','M','1'), 20, frameSize, true); //initialize the VideoWriter object
+    Size frameSize(static_cast<int>(1280), static_cast<int>(720));
+
+    std::stringstream number;
+    number<<count;
+    std::string num1;
+    number>>num1;
+    std::stringstream number2;
+    number2<<power;
+    std::string num2;
+    number2>>num2;
+
+    VideoWriter oVideoWriter (std::string(argv[1])+"/output"+num1+"_"+num2+".avi", CV_FOURCC('P','I','M','1'), 50, frameSize, true); //initialize the VideoWriter object
+
 
     int kra=0;
     for ( std::vector<std::string>::iterator p = files.begin(); p != files.end(); p++ ) {
       std::cout<<"frame: "<<kra<<"\n";
       oVideoWriter.write(read_image(*p, count, power));
+      //pic.release();
       kra++;
     }
 

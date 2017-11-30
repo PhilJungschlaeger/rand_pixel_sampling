@@ -10,6 +10,22 @@
 #include <iostream>
 
 using namespace cv;
+bool wayToSort(std::string i, std::string j)
+{
+
+  int i_number = 0;
+  int j_number = 0;
+  std::string firstString= "";
+  std::string secondString="";
+
+  std::stringstream ss1(i);
+  ss1 >> firstString >> i_number;
+  std::stringstream ss2(j);
+  ss2 >> secondString >> j_number;
+  //std::cout << "firstInteger " << firstIntege
+  return i_number < j_number;
+ }
+
 void getdir (std::string dir, std::vector<std::string> &files)
 {
     DIR *dp;
@@ -30,7 +46,7 @@ void getdir (std::string dir, std::vector<std::string> &files)
       files.push_back(name);
     }
     closedir(dp);
-    std::sort( files.begin(), files.end() );
+    std::sort( files.begin(), files.end(),  wayToSort );
 }
 /*
 void getdir (const char* dir, std::vector<const char*> &files)
@@ -65,12 +81,12 @@ Mat read_image(std::string file)
   std::ifstream myfile(file.c_str());
   int SIZEX;
   int SIZEY;
-  std::cout<<"here""\n";
+  //std::cout<<"here""\n";
   std::cout<<file<<"\n";
   if (myfile.is_open())
   {
-    std::cout<<"here\n";
-      std::cout <<"open file" <<"\n";
+    //std::cout<<"here\n";
+      //std::cout <<"open file" <<"\n";
       getline(myfile,line);
       std::stringstream meta;
       meta<<line;
@@ -105,6 +121,7 @@ Mat read_image(std::string file)
   }
 }
 
+
 int main(int argc, char** argv )
 {
 //CHECK_INPUT:
@@ -120,12 +137,12 @@ int main(int argc, char** argv )
     getdir(argv[1],files);
     clock_t begin_time = clock();
 
-    Size frameSize(static_cast<int>(640), static_cast<int>(360));
-    VideoWriter oVideoWriter ("./output.avi", CV_FOURCC('P','I','M','1'), 20, frameSize, true); //initialize the VideoWriter object
+    Size frameSize(static_cast<int>(1280), static_cast<int>(720));
+    VideoWriter oVideoWriter ("./output.avi", CV_FOURCC('P','I','M','1'), 50, frameSize, true); //initialize the VideoWriter object
 
 
     for ( std::vector<std::string>::iterator p = files.begin(); p != files.end(); p++ ) {
-
+      //std::cout<<*p<<"\n";
       oVideoWriter.write(read_image(*p));
     }
 
