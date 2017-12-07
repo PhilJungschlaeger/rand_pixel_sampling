@@ -5,6 +5,7 @@ project (sample_vid_c)
 project (nointerpretation)
 project (nointerpretation_vid)
 project (distanceinterpretation)
+project (distanceinterpretation_s)
 project (distanceinterpretation_vid)
 find_package(OpenCV)
 #Bring the headers, such as Student.h into the project
@@ -24,6 +25,9 @@ target_link_libraries( nointerpretation_vid ${OpenCV_LIBS} )
 
 add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw3.cpp)
 target_link_libraries( distanceinterpretation ${OpenCV_LIBS} )
+
+add_executable(distanceinterpretation_s source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw_s.cpp)
+target_link_libraries( distanceinterpretation_s ${OpenCV_LIBS} )
 
 add_executable(sample_pic source/pixel.cpp source/rsf_writer.cpp source/sample_random_pic.cpp)
 target_link_libraries( sample_pic ${OpenCV_LIBS} )
