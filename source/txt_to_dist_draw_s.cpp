@@ -25,8 +25,8 @@ todo:
 
 //BUCKETS
   //chose X and Y as natural divider of the resolution!
-int X=5;//160;//320;//640; //von 540
-int Y=5;//45;//90;//180; //von 360
+int X=1;//160;//160;//320;//640; //von 540
+int Y=1;//90;//45;//90;//180; //von 360
 
 //RESOLTUION
 int SIZEX;
@@ -121,8 +121,8 @@ void check_bucket(int x, int y, std::vector<Pixel> & v_in, std::list<std::vector
     // x, y, dist, r, g, b
     std::list<std::vector<double> > nec_points;
     std::vector<double> to_store;
-    to_store.push_back(x);
-    to_store.push_back(y);
+    to_store.push_back(v_in[p].x);
+    to_store.push_back(v_in[p].y);
     to_store.push_back(distance);
     to_store.push_back(v_in[p].color[0]);
     to_store.push_back(v_in[p].color[1]);
@@ -417,32 +417,65 @@ int main(int argc, char** argv )
               // x, y, dist, r, g, b
               std::list<std::vector<double> > nec_points;
               closest_points(samples, x, y,n, count, nec_points); //get closest_points
-              std::cout<<"here\n";
-              /*shadow:
-              std::vector<std::vector<int> > shadows;
 
+
+              std::vector<std::vector<int> > shadows;
+              std::vector<int> indi;
+              int ika=0;
               for(std::list<std::vector<double> >::iterator o = nec_points.begin(); o != nec_points.end(); ++o)
               {
                 bool in_shadow=false;
                 for(int p=0; p<shadows.size();p++ )
                 {
 
-                  if((shadows[p][0])*((*o)[0])+(shadows[p][1])*((*o)[1])>=(shadows[p][2]))
+                  //std::cout<<(shadows[p][0])<<"\n";
+                  //*((*o)[0])+(shadows[p][1])*((*o)[1])<<">?"<<(shadows[p][2])<<"\n";
+                  if((shadows[p][0])*((*o)[0])+(shadows[p][1])*((*o)[1])>(shadows[p][2]))
                   {
+
                     in_shadow=true;//
-                    std::cout<<"shadow\n";
+
+                    //std::cout<<"shadow!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
                     break;
                   }
                 }
+
                 if(in_shadow)
                 {
+                    indi.push_back(ika); //delete later!
                   //delete sample
                 }else{
                   //add new shadow_space
+                  //ortho:
+
+                  double n_x=(*o)[0]-x;
+                //  std::cout<<(*o)[0]<<"as\n";
+                //  std::cout<<x<<"ass\n";
+                  double n_y=(*o)[1]-y;
+                  std::vector<int> new_shad;
+                  new_shad.push_back(n_x);//x_fac;
+                  new_shad.push_back(n_y);//y_fac;
+                  new_shad.push_back((*o)[0]*n_x+(*o)[1]*n_y);//bordert_val;
+                  shadows.push_back(new_shad);
                 }
+                ika++;
               }
 
-              */
+              //delete shadow samples:
+
+              for(int i=indi.size()-1; i>=0; i--)
+              {
+                std::list<std::vector<double> >::iterator la=nec_points.begin();
+                for(int kr=0; kr<indi[i];kr++)
+                {
+                  la++;
+                }
+                nec_points.erase(la);
+              }
+
+
+
+
               std::cout<<"count:"<<nec_points.size()<<"\n";
 
               if(nec_points.size()==1)  //specialcas: we dont want to divide by zero!
@@ -478,10 +511,14 @@ int main(int argc, char** argv )
                   output.at<Vec3b>(Point(x,y))[1]=nec_points.begin()[4];
                   output.at<Vec3b>(Point(x,y))[2]=nec_points.begin()[5];
                   */
-                  r+=(*nec_points.begin())[3]*std::pow((sum-(*nec_points.begin())[2]),power)/(faktor);
-                  g+=(*nec_points.begin())[4]*std::pow((sum-(*nec_points.begin())[2]),power)/(faktor);
-                  b+=(*nec_points.begin())[5]*std::pow((sum-(*nec_points.begin())[2]),power)/(faktor);
+                  //r+= p->second[0] * std::pow(  (sum-p->first)  , power ) / (faktor);
+                  r+=(*p)[3]  *std::pow(sum-(*p)[2],power)/(faktor);
+                  g+=(*p)[4]*std::pow(sum-(*p)[2],power)/(faktor);
+                  b+=(*p)[5]*std::pow(sum-(*p)[2],power)/(faktor);
+                  //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
                 }
+                //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
+
 
                 output.at<Vec3b>(Point(x,y))[0]=r;
                 output.at<Vec3b>(Point(x,y))[1]=g;
