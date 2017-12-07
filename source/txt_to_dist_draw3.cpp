@@ -25,8 +25,8 @@ todo:
 
 //BUCKETS
   //chose X and Y as natural divider of the resolution!
-int X=160;//160;//320;//640; //von 540
-int Y=45;//45;//90;//180; //von 360
+int X=10;//160;//320;//640; //von 540
+int Y=10;//45;//90;//180; //von 360
 
 //RESOLTUION
 int SIZEX;
@@ -428,6 +428,7 @@ int main(int argc, char** argv )
                   b+=p->second[2]*std::pow((sum-p->first),power)/(faktor);
                 }
 
+                  std::cout<<"fak"<<r<<"\n";
                 output.at<Vec3b>(Point(x,y))[0]=r;
                 output.at<Vec3b>(Point(x,y))[1]=g;
                 output.at<Vec3b>(Point(x,y))[2]=b;
