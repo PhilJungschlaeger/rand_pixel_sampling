@@ -25,9 +25,9 @@ todo:
 
 //BUCKETS
   //chose X and Y as natural divider of the resolution!
-int X=1;//160;//160;//320;//640; //von 540
-int Y=1;//90;//45;//90;//180; //von 360
-
+int X=6;//160;//160;//320;//640; //von 540
+int Y=8;//90;//45;//90;//180; //von 360
+#define PI 3.14159265
 //RESOLTUION
 int SIZEX;
 int SIZEY;
@@ -487,24 +487,130 @@ int main(int argc, char** argv )
                 //floor(r+0.5);
               }else{
 
+                //distance:
+                double dist_fac=0.5;
+                double angl_fac=1-dist_fac;
+                int power_b=1;
                 //sum of distances:
                 int sum=0;
                 for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   sum+=(*p)[2];
                 }
+                sum;
+
+                //calc angle:
+                std::vector<double> angle;
+                for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                  double s_x=(*p)[0]-x;
+                  double s_y=(*p)[1]-y;
+                  double pos_angl=400;
+                  double neg_angl=400;
+                  int vorz=1;
+                  double clos=400;
+                  //compare directional vector to others, to get angle:
+                  for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
+                    double s_x_q=(*q)[0]-x;
+                    double s_y_q=(*q)[1]-y;
+                    if((*p)[0]!=(*q)[0]&&(*p)[1]!=(*q)[1])
+                    {
+                      double tmp_angl;
+                      //if(s_x*s_x_q+s_y*s_y_q>=0)
+                      //{
+
+                        //tmp_angl=180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                        tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;//(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+
+                      //}else{
+                          //tmp_angl=-180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                      //}
+                      //std::cout<<(s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2)))<<"sad\n";
+                      //std::cout<<tmp_angl*180/PI<<"aas\n";
+                    //  std::cout<<tmp_angl<<"tmp\n";
+                      if(std::abs(tmp_angl)<clos)
+                      {
+                        clos=std::abs(tmp_angl);
+                        if(tmp_angl>=0)
+                        {
+                          vorz=1;
+                        }else{
+                          vorz=-1;
+                        }
+                      }
+                    }
+
+
+                    //cos(phi)=A*B/|A|*|B|
+
+                  }
+
+                    pos_angl=clos;
+                    clos=400;
+                    for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
+                      double s_x_q=(*q)[0]-x;
+                      double s_y_q=(*q)[1]-y;
+                      if((*p)[0]!=(*q)[0]&&(*p)[1]!=(*q)[1])
+                      {
+                        double tmp_angl;
+                        //if(s_x*s_x_q+s_y*s_y_q>=0)
+                        //{
+
+                          //tmp_angl=180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                          tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;//(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+
+                        //}else{
+                            //tmp_angl=-180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                        //}
+                        //std::cout<<(s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2)))<<"sad\n";
+                        //std::cout<<tmp_angl*180/PI<<"aas\n";
+                      //  std::cout<<tmp_angl<<"tmp\n";
+                        if(vorz>0)
+                        {
+                          if(tmp_angl>0)
+                          {
+                            tmp_angl=360-tmp_angl;
+                          }
+                        }else{
+                          if(tmp_angl<0)
+                          {
+                            tmp_angl=360+tmp_angl;
+                          }
+                        }
+
+                        if(std::abs(tmp_angl)<clos)
+                        {
+                          clos=std::abs(tmp_angl);
+                        }
+                      }
+
+
+                      //cos(phi)=A*B/|A|*|B|
+
+                    }
+
+
+                    neg_angl=clos;
+
+                  //std::cout<<"pos. "<<pos_angl/2<<" neg.: "<<neg_angl/2<<"\n";
+
+                  angle.push_back((pos_angl/2+neg_angl/2)/360); //or 2pi
+                }
 
                 //calculate faktor: //to ensure, that each pixel has 100% intensity
+
                 double faktor=0.0;
+                int i=0;
                 for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   double dist= (*p)[2];
-                  faktor+=std::pow((sum-dist),power);
+                  double angl_val=angle[i];
+                  faktor+=dist_fac*std::pow((sum-dist),power)+angl_fac*std::pow(angl_val,power_b);
+                  i++;
                 }
 
                 //calc color:
                 float r=0;
                 float g=0;
                 float b=0;
-
+                i=0;
                 for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   /*
                   output.at<Vec3b>(Point(x,y))[0]=nec_points.begin()[3];
@@ -512,10 +618,11 @@ int main(int argc, char** argv )
                   output.at<Vec3b>(Point(x,y))[2]=nec_points.begin()[5];
                   */
                   //r+= p->second[0] * std::pow(  (sum-p->first)  , power ) / (faktor);
-                  r+=(*p)[3]  *std::pow(sum-(*p)[2],power)/(faktor);
-                  g+=(*p)[4]*std::pow(sum-(*p)[2],power)/(faktor);
-                  b+=(*p)[5]*std::pow(sum-(*p)[2],power)/(faktor);
+                  r+=(*p)[3]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
+                  g+=(*p)[4]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
+                  b+=(*p)[5]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
                   //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
+                  i++;
                 }
                 //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
 
