@@ -626,7 +626,7 @@ int main(int argc, char** argv )
                 }
                 //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
 
-
+                //commi
                 output.at<Vec3b>(Point(x,y))[0]=r;
                 output.at<Vec3b>(Point(x,y))[1]=g;
                 output.at<Vec3b>(Point(x,y))[2]=b;
