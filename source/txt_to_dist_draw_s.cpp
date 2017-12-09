@@ -477,7 +477,7 @@ int main(int argc, char** argv )
 
 
               std::cout<<"count:"<<nec_points.size()<<"\n";
-
+              power=std::pow(nec_points.size()-1,2);
               if(nec_points.size()==1)  //specialcas: we dont want to divide by zero!
               {
                 //only closest:
@@ -488,7 +488,7 @@ int main(int argc, char** argv )
               }else{
 
                 //distance:
-                double dist_fac=0.5;
+                double dist_fac=1;
                 double angl_fac=1-dist_fac;
                 int power_b=1;
                 //sum of distances:
@@ -511,21 +511,25 @@ int main(int argc, char** argv )
                   for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
                     double s_x_q=(*q)[0]-x;
                     double s_y_q=(*q)[1]-y;
-                    if((*p)[0]!=(*q)[0]&&(*p)[1]!=(*q)[1])
+                    if((*p)[0]!=(*q)[0]||(*p)[1]!=(*q)[1])
                     {
                       double tmp_angl;
-                      //if(s_x*s_x_q+s_y*s_y_q>=0)
-                      //{
+                      /*
+                      if(s_x*s_x_q+s_y*s_y_q>=0)
+                      {
 
-                        //tmp_angl=180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
-                        tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;//(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                        tmp_angl=180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
 
-                      //}else{
-                          //tmp_angl=-180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
-                      //}
+                      }else{
+                          tmp_angl=-180*std::acos((s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                      }
+                      */
+                      //std::cout<<tmp_angl<<"actmp\n";
+                      tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;//(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+                      //std::cout<<tmp_angl<<"atmp\n";
                       //std::cout<<(s_x*s_x_q+s_y*s_y_q)/(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2)))<<"sad\n";
                       //std::cout<<tmp_angl*180/PI<<"aas\n";
-                    //  std::cout<<tmp_angl<<"tmp\n";
+
                       if(std::abs(tmp_angl)<clos)
                       {
                         clos=std::abs(tmp_angl);
@@ -536,6 +540,8 @@ int main(int argc, char** argv )
                           vorz=-1;
                         }
                       }
+                    }else{
+                    //  std::cout<<"sam\n";
                     }
 
 
@@ -548,7 +554,7 @@ int main(int argc, char** argv )
                     for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
                       double s_x_q=(*q)[0]-x;
                       double s_y_q=(*q)[1]-y;
-                      if((*p)[0]!=(*q)[0]&&(*p)[1]!=(*q)[1])
+                      if((*p)[0]!=(*q)[0]||(*p)[1]!=(*q)[1])
                       {
                         double tmp_angl;
                         //if(s_x*s_x_q+s_y*s_y_q>=0)
@@ -590,21 +596,29 @@ int main(int argc, char** argv )
 
                     neg_angl=clos;
 
-                  //std::cout<<"pos. "<<pos_angl/2<<" neg.: "<<neg_angl/2<<"\n";
+                  std::cout<<"pos. "<<pos_angl/2<<" neg.: "<<neg_angl/2<<"\n";
 
-                  angle.push_back((pos_angl/2+neg_angl/2)/360); //or 2pi
+                  angle.push_back((pos_angl/2+neg_angl/2)); //or 2pi
                 }
 
                 //calculate faktor: //to ensure, that each pixel has 100% intensity
 
                 double faktor=0.0;
                 int i=0;
+                double ang_sum=0.0;
                 for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   double dist= (*p)[2];
                   double angl_val=angle[i];
-                  faktor+=dist_fac*std::pow((sum-dist),power)+angl_fac*std::pow(angl_val,power_b);
+                  ang_sum+=angl_val;
+                  //dist:
+                  //faktor+=(std::pow((sum-dist),power));//(angl_val);///std::pow((sum-dist),power)*std::pow(angl_val,power_b);
+                  //area:
+                  //faktor+=(std::pow((angl_val),power));
+                  //b oth:
+                  faktor+=std::pow((sum-dist),power)*(std::pow((angl_val),power));
                   i++;
                 }
+                std::cout<<"angsum:      "<<ang_sum<<"\n";
 
                 //calc color:
                 float r=0;
@@ -618,9 +632,19 @@ int main(int argc, char** argv )
                   output.at<Vec3b>(Point(x,y))[2]=nec_points.begin()[5];
                   */
                   //r+= p->second[0] * std::pow(  (sum-p->first)  , power ) / (faktor);
-                  r+=(*p)[3]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
-                  g+=(*p)[4]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
-                  b+=(*p)[5]*(dist_fac*std::pow(sum-(*p)[2],power)+angl_fac*std::pow(angle[i],power_b))/(faktor);
+                  /*
+                  r+=(*p)[3]*(std::pow(sum-(*p)[2],power)*std::pow(angle[i],power_b))/(faktor);
+                  g+=(*p)[4]*(std::pow(sum-(*p)[2],power)*std::pow(angle[i],power_b))/(faktor);
+                  b+=(*p)[5]*(std::pow(sum-(*p)[2],power)*std::pow(angle[i],power_b))/(faktor);
+                  */
+                  //dist: double influence=(std::pow(sum-(*p)[2],power))/faktor;///sum)*(*/angle[i]/360));///(faktor);
+                  //area:
+                  //double influence=(std::pow(angle[i],power))/faktor;///sum)*(*//360));///(faktor);
+                  // both:
+                  double influence=(std::pow(angle[i],power))*(std::pow(sum-(*p)[2],power))/faktor;//sum)*(
+                  r+=(*p)[3]*influence;
+                  g+=(*p)[4]*influence;
+                  b+=(*p)[5]*influence;
                   //std::cout<<"fak"<<nec_points.begin())[3]<<"\n";
                   i++;
                 }
