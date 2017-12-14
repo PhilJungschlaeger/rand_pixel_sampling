@@ -25,8 +25,8 @@ todo:
 
 //BUCKETS
   //chose X and Y as natural divider of the resolution!
-int X=6;//160;//160;//320;//640; //von 540
-int Y=8;//90;//45;//90;//180; //von 360
+int X=320;//160;//160;//320;//640; //von 540
+int Y=90;//90;//45;//90;//180; //von 360
 #define PI 3.14159265
 //RESOLTUION
 int SIZEX;
@@ -477,7 +477,7 @@ int main(int argc, char** argv )
 
 
               std::cout<<"count:"<<nec_points.size()<<"\n";
-              power=std::pow(nec_points.size()-1,2);
+              power=1;//std::pow(nec_points.size()-1,2);
               if(nec_points.size()==1)  //specialcas: we dont want to divide by zero!
               {
                 //only closest:
@@ -492,11 +492,14 @@ int main(int argc, char** argv )
                 double angl_fac=1-dist_fac;
                 int power_b=1;
                 //sum of distances:
-                int sum=0;
+                int sum=0;  //now use max+min...
                 for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
                   sum+=(*p)[2];
                 }
-                sum;
+                //std::list<std::vector<double> >::iterator las=nec_points.back();
+                //las--;
+                sum=(*nec_points.begin())[2]+nec_points.back()[2];
+
 
                 //calc angle:
                 std::vector<double> angle;
