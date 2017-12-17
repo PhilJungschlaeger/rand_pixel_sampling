@@ -4,6 +4,7 @@ project (sample_vid)
 project (sample_vid_c)
 project (nointerpretation)
 project (nointerpretation_vid)
+project (n_vid)
 project (distanceinterpretation)
 project (distanceinterpretation_s)
 project (distanceinterpretation_vid)
@@ -22,6 +23,9 @@ target_link_libraries( nointerpretation ${OpenCV_LIBS} )
 
 add_executable(nointerpretation_vid source/pixel.cpp source/rsf_writer.cpp source/txts_to_mp4.cpp)
 target_link_libraries( nointerpretation_vid ${OpenCV_LIBS} )
+
+add_executable(n_vid source/pixel.cpp source/rsf_writer.cpp source/txts_to_mp4_n.cpp)
+target_link_libraries( n_vid ${OpenCV_LIBS} )
 
 add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw3.cpp)
 target_link_libraries( distanceinterpretation ${OpenCV_LIBS} )
