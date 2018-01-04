@@ -257,7 +257,11 @@ public:
                     }
                     i++;
                   }
-                  std::cout<<"angsum:      "<<ang_sum<<"\n";
+                  if(ang_sum!=360)
+                  {
+                    std::cout<<"angsum:      "<<ang_sum<<"\n";
+                  }
+
 
 
                   i=0;
