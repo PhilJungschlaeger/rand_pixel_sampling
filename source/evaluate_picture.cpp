@@ -16,7 +16,7 @@ int main(int argc, char** argv )
   einfache zufallsverteilung oder gridverteilung oder ...
   */
   //SAMPLING
-  int samples_amount=10000;
+  int samples_amount=1024000; //25%
 
   Mat image;
 
@@ -35,7 +35,7 @@ int main(int argc, char** argv )
   }
 
 //01. SAMPLING
-  std::cout<<"01. SAMPLING\n";
+  std::cout<<"\n01.°°°°°°°°°°°°°°°°°°°°°°°°SAMPLING\n";
   Sampler sampler(samples_amount, input_image);
   std::vector<std::vector<Pixel> > patterns;
   //patterns.push_back(sampler.calc_grid()); //0:GRID
@@ -43,7 +43,7 @@ int main(int argc, char** argv )
   //...
 
 //02. INTERPRETATION
-std::cout<<"02. INTERPRETATION\n";
+std::cout<<"\n02.°°°°°°°°°°°°°°°°°°°°°°°°INTERPRETATION\n";
 std::vector<Mat> output_images;
 Interpreter interpreter(input_image.cols,input_image.rows);
 std::vector<std::string> methods;
@@ -56,21 +56,32 @@ for(std::vector<std::vector<Pixel> >::iterator pattern = patterns.begin(); patte
   output_images.push_back(interpreter.voronoi());
   methods.push_back("prox2_2");
   output_images.push_back(interpreter.naive_proximity(2,2));
-  methods.push_back("prox3_3");
-  output_images.push_back(interpreter.naive_proximity(3,3));
-  methods.push_back("prox4_4");
-  output_images.push_back(interpreter.naive_proximity(4,4));
+  methods.push_back("shadowa");
+  output_images.push_back(interpreter.shadow_proximity(0));
+  methods.push_back("shadowb");
+  output_images.push_back(interpreter.shadow_proximity(1));
+  methods.push_back("shadowc");
+  output_images.push_back(interpreter.shadow_proximity(2));
+  methods.push_back("areaonly0");
+  output_images.push_back(interpreter.area_only_proximity(0));
+  methods.push_back("areaandprox0");
+  output_images.push_back(interpreter.area_and_proximity(0));
+  methods.push_back("areaonly1");
+  output_images.push_back(interpreter.area_only_proximity(1));
+  methods.push_back("areaandprox1");
+  output_images.push_back(interpreter.area_and_proximity(1));
+
 }
 
 //03. EVALUATION
-std::cout<<"03. EVALUATION\n";
+std::cout<<"\n03.°°°°°°°°°°°°°°°°°°°°°°°°EVALUATION\n";
 Evaluator evaluator(input_image);
 for(int i=0; i<output_images.size(); i++) {
   std::cout<<i<<" "<<methods[i]<<"\n";
   Mat out=evaluator.evaluate_abs(output_images[i]);
-  imwrite("a"+std::string(methods[i])+std::string("eval_abs_")+".jpg",out);
+  imwrite("b"+std::string("eval_abs_")+std::string(methods[i])+".jpg",out);
   //imwrite("a"+std::string(methods[i])+std::string("eval_3d_")+".jpg",evaluator.evaluate_abs(output_images[i]));
-  imwrite("a"+std::string(methods[i])+std::string("output")+".jpg", output_images[i] );
+  imwrite("b"+std::string("output")+std::string(methods[i])+".jpg", output_images[i] );
 }
 
 

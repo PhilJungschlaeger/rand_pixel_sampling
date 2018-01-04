@@ -22,11 +22,24 @@ public:
     //blue is correct
     double sum=0;
     std::vector<std::pair<double,int> > borders;
+    double val=0.0;
+    double step=0.002;
+    borders.push_back(std::pair<double,int>(0,0));
     borders.push_back(std::pair<double,int>(0.001,0));
+    borders.push_back(std::pair<double,int>(0.002,0));
+    borders.push_back(std::pair<double,int>(0.005,0));
     borders.push_back(std::pair<double,int>(0.01,0));
     borders.push_back(std::pair<double,int>(0.1,0));
     borders.push_back(std::pair<double,int>(0.5,0));
     borders.push_back(std::pair<double,int>(1.0,0));
+    /*
+    while(val<1.0)
+    {
+      borders.push_back(std::pair<double,int>(val,0));
+      val+=0.002;
+    }
+    */
+
     Mat output(_Ref_image.rows, _Ref_image.cols, CV_64FC3, Scalar(0,0,0));
     for(int x=0; x<_Ref_image.cols; x++)
     {
@@ -52,13 +65,15 @@ public:
           output.at<Vec3d>(Point(x,y))[2]=(error-2*255);
         }
 
+
         for(std::vector<std::pair<double,int> > ::iterator o = borders.begin(); o !=  borders.end(); ++o) {
-          if(error< max*(*o).first)
+          if(error<= max*(*o).first)
           {
             (*o).second++;
             break;
           }
         }
+
 
 
 
@@ -74,8 +89,20 @@ public:
       }
     }
     std::cout<<"error_abs:"<<sum<<"\n";
+    int total=0;
+    //std::vector<Mat> eval(1280,border.size(), CV_64FC3, Scalar(0,0,0));
+
+    //int coll=0;
     for(std::vector<std::pair<double,int> > ::iterator o = borders.begin(); o !=  borders.end(); ++o) {
-      std::cout<<"better than: "<<(*o).first<<": "<<(*o).second<<"\n";
+
+      total+=(*o).second;
+      /*
+      for(int i=0; i<(*o).second; i++)
+      {
+        eval.at<Vec3d>(Point(coll,i))[0]=255;
+      }
+      coll++;*/
+      std::cout<<"better than: "<<(*o).first<<": "<<total<<"got:"<<(*o).second<<"\n";
     }
     return output;
   }

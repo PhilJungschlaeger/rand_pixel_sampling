@@ -5,14 +5,15 @@
 
 
 using namespace cv;
+#define PI 3.14159265
 
 class Interpreter{
 public:
   Interpreter(int X, int Y):
       _X(X),
       _Y(Y),
-      _X_Buckets(160), //maybe clever function?
-      _Y_Buckets(90)  //clever function?
+      _X_Buckets(640), //maybe clever function?
+      _Y_Buckets(400)  //clever function?
       {}
 
       //no INTERPRETATION
@@ -36,6 +37,39 @@ public:
       //simple proximity !new radius!
       Mat naive_proximity(int count, int power){
         std::cout<<"interpretation: naive"<<count<<" "<<power<<"\n";
+        return full_proximity(count, power, false, false,0);
+      }
+
+      //Proximity with shadow
+      //simple proximity !new radius!
+      Mat shadow_proximity(int mode){
+        int count=15; //um zuerst nach punkten zu suchen..
+        int power=1;  //wird clever überschrieben
+        bool use_shadow=true;
+        std::cout<<"interpretation: prox_shadow\n";
+        return full_proximity(count, power, use_shadow, 0, mode);
+      }
+
+      Mat area_only_proximity(int mode){
+        int count=15;
+        int power=1;
+        int use_area=1;
+        bool use_shadow=true;
+        std::cout<<"interpretation: area_only\n";
+        return full_proximity(count, power, use_shadow, use_area, mode);
+      }
+
+      Mat area_and_proximity(int mode){
+        int count=15;
+        int power=1;
+        int use_area=2;
+        bool use_shadow=true;
+        std::cout<<"interpretation: area_and_prox\n";
+        return full_proximity(count, power, use_shadow, use_area, mode);
+      }
+
+      Mat full_proximity(int count, int power, bool use_shadow, int use_area, int mode){
+        //std::cout<<"interpretation: prox_shadow\n";
         Mat output=no_interpretation();
 
         for(int x=0; x<_X; x++)
@@ -44,66 +78,77 @@ public:
           {
             if(!_Check_pic.at<Vec3b>(Point(x,y))[0]) // if not allready sampled:
             {
-              std::cout<<"x "<<x<<" y "<<y<<"\n";
+              //std::cout<<"x "<<x<<" y "<<y<<"\n";
             std::list<std::vector<double> > nec_points;    //neccesseray points
               closest_points(x, y,count, nec_points); //get closest_points
 
 
-              /* shadow:::.
-              std::vector<std::vector<int> > shadows;
-              std::vector<int> indi;
-              int ika=0;
-              for(std::list<std::vector<double> >::iterator o = nec_points.begin(); o != nec_points.end(); ++o)
-              {
-                bool in_shadow=false;
-                for(int p=0; p<shadows.size();p++ )
+              if(use_shadow)    //sortiert beschattete samples aus!:
+              {                 //könnte man nochmal testen.., passt aber vermutlich
+                // shadow:::.
+                std::vector<std::vector<int> > shadows;
+                std::vector<int> indi;
+                int ika=0;
+                for(std::list<std::vector<double> >::iterator o = nec_points.begin(); o != nec_points.end(); ++o)
                 {
-
-                  //std::cout<<(shadows[p][0])<<"\n";
-                  //*((*o)[0])+(shadows[p][1])*((*o)[1])<<">?"<<(shadows[p][2])<<"\n";
-                  if((shadows[p][0])*((*o)[0])+(shadows[p][1])*((*o)[1])>(shadows[p][2]))
+                  bool in_shadow=false;
+                  for(int p=0; p<shadows.size();p++ )
                   {
+                    if((shadows[p][0])*((*o)[0])+(shadows[p][1])*((*o)[1])>(shadows[p][2]))
+                    {
 
-                    in_shadow=true;//
-
-                    //std::cout<<"shadow!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-                    break;
+                      in_shadow=true;
+                      break;
+                    }
                   }
+
+                  if(in_shadow)
+                  {
+                      indi.push_back(ika); //delete later!
+                    //delete sample
+                  }else{
+                    //add new shadow_space
+                    //ortho:
+
+                    double n_x=(*o)[0]-x;
+                  //  std::cout<<(*o)[0]<<"as\n";
+                  //  std::cout<<x<<"ass\n";
+                    double n_y=(*o)[1]-y;
+                    std::vector<int> new_shad;
+                    new_shad.push_back(n_x);//x_fac;
+                    new_shad.push_back(n_y);//y_fac;
+                    new_shad.push_back((*o)[0]*n_x+(*o)[1]*n_y);//bordert_val;
+                    shadows.push_back(new_shad);
+                  }
+                  ika++;
                 }
 
-                if(in_shadow)
+                //delete shadow samples:
+
+                for(int i=indi.size()-1; i>=0; i--)
                 {
-                    indi.push_back(ika); //delete later!
-                  //delete sample
+                  std::list<std::vector<double> >::iterator la=nec_points.begin();
+                  for(int kr=0; kr<indi[i];kr++)
+                  {
+                    la++;
+                  }
+                  nec_points.erase(la);
+                }
+                if(mode==0)
+                {
+                  power=1;
+                }else if(mode==1)
+                {
+                  power=2;
+                }else if(mode==2)
+                {
+                  power=nec_points.size();
                 }else{
-                  //add new shadow_space
-                  //ortho:
-
-                  double n_x=(*o)[0]-x;
-                //  std::cout<<(*o)[0]<<"as\n";
-                //  std::cout<<x<<"ass\n";
-                  double n_y=(*o)[1]-y;
-                  std::vector<int> new_shad;
-                  new_shad.push_back(n_x);//x_fac;
-                  new_shad.push_back(n_y);//y_fac;
-                  new_shad.push_back((*o)[0]*n_x+(*o)[1]*n_y);//bordert_val;
-                  shadows.push_back(new_shad);
+                  power=nec_points.size()*nec_points.size();
                 }
-                ika++;
-              }
 
-              //delete shadow samples:
+              }//shadow<
 
-              for(int i=indi.size()-1; i>=0; i--)
-              {
-                std::list<std::vector<double> >::iterator la=nec_points.begin();
-                for(int kr=0; kr<indi[i];kr++)
-                {
-                  la++;
-                }
-                nec_points.erase(la);
-              }
-              */
 
               if(count==1)  //special case: we dont want to divide by zero!
               {
@@ -114,54 +159,143 @@ public:
                 //floor(r+0.5);
               }else{
 
-                /*
-                //distance:
-                double dist_fac=1;
-                double angl_fac=1-dist_fac;
-                int power_b=1;
-                //sum of distances:
-                int sum=0;  //now use max+min...
-                for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
-                  sum+=(*p)[2];
-                }
-                */
-
-                //sum of distances:
-                //int sum=(*nec_points.begin())[2]+nec_points.back()[2]; new!!!
-                //sum of distances:
-                int sum=0;
-                /*old:
-                for(std::list<std::pair<double,Vec3d> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
-                  sum+=p->first;
-                }
-                */
-                sum=(*nec_points.begin())[2]+nec_points.back()[2];
-
-                  /*angle.....*/
-
-                //calculate faktor: //to ensure, that each pixel has 100% intensity
-                double faktor=0.0;
-                for(  std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
-                  double dist= (*p)[2];
-                  faktor+=std::pow((sum-dist),power);
-                }
-
-                //calc color:
-
-
                 float r=0;
                 float g=0;
                 float b=0;
 
-                for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
 
-                  double influence=(std::pow(sum-(*p)[2],power))/faktor;//sum)*(
-                  r+=(*p)[3]*influence;
-                  g+=(*p)[4]*influence;
-                  b+=(*p)[5]*influence;
+                if(use_area)  //nimmt eine bewertung nach dem winkel vor
+                {//calc angle:    //nicht sehr sicher, ob die berechnung voll korrekt ist!!
+                  std::vector<double> angle;
+                  for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                    double s_x=(*p)[0]-x;
+                    double s_y=(*p)[1]-y;
+                    double pos_angl=400;
+                    double neg_angl=400;
+                    int vorz=1;
+                    double clos=400;
+                    //compare directional vector to others, to get angle:
+                    for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
+                      double s_x_q=(*q)[0]-x;
+                      double s_y_q=(*q)[1]-y;
+                      if((*p)[0]!=(*q)[0]||(*p)[1]!=(*q)[1])
+                      {
+                        double tmp_angl;
 
+                        tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;
+
+                        if(std::abs(tmp_angl)<clos)
+                        {
+                          clos=std::abs(tmp_angl);
+                          if(tmp_angl>=0)
+                          {
+                            vorz=1;
+                          }else{
+                            vorz=-1;
+                          }
+                        }
+                      }
+                    }
+
+                      pos_angl=clos;
+                      clos=400;
+                      for(std::list<std::vector<double> >::iterator q = nec_points.begin(); q != nec_points.end(); ++q) {
+                        double s_x_q=(*q)[0]-x;
+                        double s_y_q=(*q)[1]-y;
+                        if((*p)[0]!=(*q)[0]||(*p)[1]!=(*q)[1])
+                        {
+                          double tmp_angl;
+                          tmp_angl=180*std::atan2(s_x*s_y_q-s_y*s_x_q,(s_x*s_x_q+s_y*s_y_q))/PI;//(sqrt(std::pow(s_x,2)+std::pow(s_y,2))*sqrt(std::pow(s_x_q,2)+std::pow(s_y_q,2))))/PI;
+
+                          if(vorz>0)
+                          {
+                            if(tmp_angl>0)
+                            {
+                              tmp_angl=360-tmp_angl;
+                            }
+                          }else{
+                            if(tmp_angl<0)
+                            {
+                              tmp_angl=360+tmp_angl;
+                            }
+                          }
+
+                          if(std::abs(tmp_angl)<clos)
+                          {
+                            clos=std::abs(tmp_angl);
+                          }
+                        }
+                      }
+                      neg_angl=clos;
+                    //std::cout<<"pos. "<<pos_angl/2<<" neg.: "<<neg_angl/2<<"\n";
+
+                    angle.push_back((pos_angl/2+neg_angl/2)); //or 2pi
+                  }
+
+                  //calculate faktor: //to ensure, that each pixel has 100% intensity
+                  double faktor=0.0;
+                  int i=0;
+                  double ang_sum=0.0;
+                  int sum=(*nec_points.begin())[2]+nec_points.back()[2];
+
+
+                  for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                    double dist= (*p)[2];
+                    double angl_val=angle[i];
+                    ang_sum+=angl_val;
+                    //dist:
+                    //faktor+=(std::pow((sum-dist),power));//(angl_val);///std::pow((sum-dist),power)*std::pow(angl_val,power_b);
+                    //area:
+                    //faktor+=(std::pow((angl_val),power));
+                    //b oth:
+                    if(use_area==1)//only area or area and prox
+                    {
+                      //only area
+                      faktor+=(std::pow((angl_val),power));
+                    }else{  //usually area and proximity
+                      faktor+=std::pow((sum-dist),power)*(std::pow((angl_val),power));
+                    }
+                    i++;
+                  }
+                  std::cout<<"angsum:      "<<ang_sum<<"\n";
+
+
+                  i=0;
+                  for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                    double influence=0.0;
+                    if(use_area==1)//only area or area and prox
+                    {
+                      influence=(std::pow(angle[i],power))/faktor;
+                    }else{
+                      influence=(std::pow(angle[i],power))*(std::pow(sum-(*p)[2],power))/faktor;//sum)*(
+                    }
+                    r+=(*p)[3]*influence;
+                    g+=(*p)[4]*influence;
+                    b+=(*p)[5]*influence;
+                    i++;
+                  }
+
+                }else{
+                  //simple proximity:
+                  int sum=0;
+                  double faktor=0.0;
+                  sum=(*nec_points.begin())[2]+nec_points.back()[2];
+
+                  //calculate faktor: //to ensure, that each pixel has 100% intensity
+                  for(  std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                    double dist= (*p)[2];
+                    faktor+=std::pow((sum-dist),power);
+                  }
+
+                  //calc color:
+                  for(std::list<std::vector<double> >::iterator p = nec_points.begin(); p != nec_points.end(); ++p) {
+                    double influence=(std::pow(sum-(*p)[2],power))/faktor;//sum)*(
+                    r+=(*p)[3]*influence;
+                    g+=(*p)[4]*influence;
+                    b+=(*p)[5]*influence;
+
+                  }
                 }
-
                 //std::cout<<"fak"<<r<<"\n";
                 output.at<Vec3d>(Point(x,y))[0]=r;
                 output.at<Vec3d>(Point(x,y))[1]=g;
@@ -172,7 +306,6 @@ public:
         }
         return output;
       }
-
       //////////////////////////////////////
       /*
       ermittelt für einen pixel x,y, die count-viele nächste sample-punkte(aus _Buckets)
