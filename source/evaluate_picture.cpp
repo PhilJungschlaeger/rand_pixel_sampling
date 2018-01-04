@@ -56,6 +56,10 @@ for(std::vector<std::vector<Pixel> >::iterator pattern = patterns.begin(); patte
   output_images.push_back(interpreter.voronoi());
   methods.push_back("prox2_2");
   output_images.push_back(interpreter.naive_proximity(2,2));
+  methods.push_back("prox3_3");
+  output_images.push_back(interpreter.naive_proximity(3,3));
+  methods.push_back("prox4_4");
+  output_images.push_back(interpreter.naive_proximity(4,4));
 }
 
 //03. EVALUATION
@@ -63,7 +67,8 @@ std::cout<<"03. EVALUATION\n";
 Evaluator evaluator(input_image);
 for(int i=0; i<output_images.size(); i++) {
   std::cout<<i<<" "<<methods[i]<<"\n";
-  imwrite("a"+std::string(methods[i])+std::string("eval_abs_")+".jpg",evaluator.evaluate_abs(output_images[i]));
+  Mat out=evaluator.evaluate_abs(output_images[i]);
+  imwrite("a"+std::string(methods[i])+std::string("eval_abs_")+".jpg",out);
   //imwrite("a"+std::string(methods[i])+std::string("eval_3d_")+".jpg",evaluator.evaluate_abs(output_images[i]));
   imwrite("a"+std::string(methods[i])+std::string("output")+".jpg", output_images[i] );
 }
