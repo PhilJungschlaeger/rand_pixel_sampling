@@ -1,46 +1,17 @@
+
 cmake_minimum_required(VERSION 2.8.9)
-project (sample_pic)
-project (sample_vid)
-project (sample_vid_c)
-project (nointerpretation)
-project (nointerpretation_vid)
-project (n_vid)
-project (distanceinterpretation)
-project (distanceinterpretation_s)
-project (distanceinterpretation_vid)
+project (evaluate_picture)
+
+if(("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") OR (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel") AND UNIX))
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD "c++14 ")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  set(CMAKE_CXX_FLAGS "-std=c++14 ")
+endif()
+
 find_package(OpenCV)
-#Bring the headers, such as Student.h into the project
+
 include_directories(include)
 
-#Can manually add the sources using the set command as follows:
-#set(SOURCES src/mainapp.cpp src/Student.cpp)
+add_executable(evaluate_picture source/evaluate_picture.cpp source/pixel.cpp source/sampling/sample.cpp source/interpretation/interpret.cpp source/evaluation/evaluate.cpp)
+target_link_libraries( evaluate_picture ${OpenCV_LIBS} )
 
-#However, the file(GLOB...) allows for wildcard additions:
-file(GLOB SOURCES "source/*.cpp")
-
-add_executable(nointerpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_draw.cpp)
-target_link_libraries( nointerpretation ${OpenCV_LIBS} )
-
-add_executable(nointerpretation_vid source/pixel.cpp source/rsf_writer.cpp source/txts_to_mp4.cpp)
-target_link_libraries( nointerpretation_vid ${OpenCV_LIBS} )
-
-add_executable(n_vid source/pixel.cpp source/rsf_writer.cpp source/txts_to_mp4_n.cpp)
-target_link_libraries( n_vid ${OpenCV_LIBS} )
-
-add_executable(distanceinterpretation source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw3.cpp)
-target_link_libraries( distanceinterpretation ${OpenCV_LIBS} )
-
-add_executable(distanceinterpretation_s source/pixel.cpp source/rsf_writer.cpp source/txt_to_dist_draw_s.cpp)
-target_link_libraries( distanceinterpretation_s ${OpenCV_LIBS} )
-
-add_executable(sample_pic source/pixel.cpp source/rsf_writer.cpp source/sample_random_pic.cpp)
-target_link_libraries( sample_pic ${OpenCV_LIBS} )
-
-add_executable(sample_vid source/pixel.cpp source/rsf_writer.cpp source/sample_random_vid.cpp)
-target_link_libraries( sample_vid ${OpenCV_LIBS} )
-
-add_executable(sample_vid_c source/pixel.cpp source/rsf_writer.cpp source/sample_random_vid_s_pat.cpp)
-target_link_libraries( sample_vid_c ${OpenCV_LIBS} )
-
-add_executable(distanceinterpretation_vid source/pixel.cpp source/rsf_writer.cpp source/txts_to_dist_vid.cpp)
-target_link_libraries( distanceinterpretation_vid ${OpenCV_LIBS} )
