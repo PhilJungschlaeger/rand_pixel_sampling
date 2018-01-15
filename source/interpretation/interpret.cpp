@@ -12,16 +12,18 @@ public:
   Interpreter(int X, int Y):
       _X(X),
       _Y(Y),
-      _X_Buckets(640), //maybe clever function?
-      _Y_Buckets(400)  //clever function?
+      _X_Buckets(32), //maybe clever function?
+      _Y_Buckets(18)  //clever function?
       {}
 
       //no INTERPRETATION
   Mat no_interpretation(){
     std::cout<<"interpretation: no\n";
     Mat output(_Y, _X, CV_64FC3, Scalar(0,0,0));
-    for(std::vector<Pixel>::iterator i = _Pattern.begin(); i != _Pattern.end(); ++i) {
-      output.at<Vec3d>(Point((*i).x,(*i).y))=(*i).color;
+    for(std::vector<Pixel_d>::iterator i = _Pattern.begin(); i != _Pattern.end(); ++i) {
+      output.at<Vec3d>(Point((*i).x,(*i).y))[0]=(*i).color[0];
+      output.at<Vec3d>(Point((*i).x,(*i).y))[1]=(*i).color[1];
+      output.at<Vec3d>(Point((*i).x,(*i).y))[2]=(*i).color[2];
     }
     return output;
   }
@@ -71,14 +73,14 @@ public:
       Mat full_proximity(int count, int power, bool use_shadow, int use_area, int mode){
         //std::cout<<"interpretation: prox_shadow\n";
         Mat output=no_interpretation();
-
+        int not_paint=0;
         for(int x=0; x<_X; x++)
         {
           for(int y=0; y<_Y; y++)
           {
             if(!_Check_pic.at<Vec3b>(Point(x,y))[0]) // if not allready sampled:
             {
-              //std::cout<<"x "<<x<<" y "<<y<<"\n";
+              std::cout<<"x "<<x<<" y "<<y<<"\n";
             std::list<std::vector<double> > nec_points;    //neccesseray points
               closest_points(x, y,count, nec_points); //get closest_points
 
@@ -305,9 +307,13 @@ public:
                 output.at<Vec3d>(Point(x,y))[1]=g;
                 output.at<Vec3d>(Point(x,y))[2]=b;
               }
+            }else{
+              not_paint++;
+              //std::cout<<"empty\n";
             }
           }
         }
+        std::cout<<"not_painnt: "<<not_paint<<"\n";
         return output;
       }
       //////////////////////////////////////
@@ -438,7 +444,7 @@ public:
       in v_out!
       */
 
-      void check_bucket(int x, int y, std::vector<Pixel> & v_in, std::list<std::vector<double> > & v_out, int& count)
+      void check_bucket(int x, int y, std::vector<Pixel_d> & v_in, std::list<std::vector<double> > & v_out, int& count)
       {
         for(int p = 0; p < v_in.size(); ++p) {
           double distance=dist(v_in[p].x,x,v_in[p].y,y);  //distance of new pixel
@@ -665,9 +671,10 @@ public:
         return N;
       }
 
-      void set_pattern(std::vector<Pixel>& pattern){
+      void set_pattern(std::vector<Pixel_d>& pattern){
         _Pattern=pattern;
-
+        _Buckets=std::vector<std::vector<Pixel_d> >();
+        std::cout<<_Pattern.size()<<"psize.....\n";
          _Check_pic=Mat(_Y, _X, CV_8UC3, Scalar(0,0,0));//might be changed to a 2D array of booleans?
         //Prepare Buckets:
         /*correct image scale? */
@@ -678,14 +685,14 @@ public:
         {
           for(int y=0; y<_Y_Buckets; y++)
           {
-            std::vector<Pixel> vec;
+            std::vector<Pixel_d> vec;
             _Buckets.push_back(vec);
           }
         }
 
 
         int N;
-        for(std::vector<Pixel>::iterator i = _Pattern.begin(); i != _Pattern.end(); ++i) {
+        for(std::vector<Pixel_d>::iterator i = _Pattern.begin(); i != _Pattern.end(); ++i) {
           N=xy_to_N((*i).x, (*i).y);  //get bucket
           _Buckets[N].push_back(*i);
           _Check_pic.at<Vec3b>(Point((*i).x, (*i).y))[0]=100; //already sampled
@@ -697,8 +704,8 @@ private:
   int _Y;
   int _X_Buckets;
   int _Y_Buckets;
-  std::vector<Pixel> _Pattern;
-  std::vector<std::vector<Pixel> > _Buckets;
+  std::vector<Pixel_d> _Pattern;
+  std::vector<std::vector<Pixel_d> > _Buckets;
   Mat _Check_pic;
 };
 

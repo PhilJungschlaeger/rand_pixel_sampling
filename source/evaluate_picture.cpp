@@ -16,13 +16,14 @@ int main(int argc, char** argv )
   einfache zufallsverteilung oder gridverteilung oder ...
   */
   //SAMPLING
-  int samples_amount=1024000; //25%
+  int samples_amount=102400;//1024000; //25%
 
   Mat image;
 
   std::string input= argv[1];
+  Mat input_img=imread( input,1);
   Mat input_image;
-  input_image=imread( input,1);
+  input_img.convertTo(input_image, CV_64FC3);
   std::size_t pos = input.find(".");      // position of "live" in str
   std::string name = std::string(input.substr (0,pos));
   std::cout<<"ref_image: "<<name<<"\n";
@@ -37,9 +38,9 @@ int main(int argc, char** argv )
 //01. SAMPLING
   std::cout<<"\n01.°°°°°°°°°°°°°°°°°°°°°°°°SAMPLING\n";
   Sampler sampler(samples_amount, input_image);
-  std::vector<std::vector<Pixel> > patterns;
+  std::vector<std::vector<Pixel_d> > patterns;
   //patterns.push_back(sampler.calc_grid()); //0:GRID
-  patterns.push_back(sampler.calc_rand()); //1:RAND
+  patterns.push_back(sampler.calc_rand_d()); //1:RAND
   //...
 
 //02. INTERPRETATION
@@ -47,14 +48,16 @@ std::cout<<"\n02.°°°°°°°°°°°°°°°°°°°°°°°°INTERPRETATION\
 std::vector<Mat> output_images;
 Interpreter interpreter(input_image.cols,input_image.rows);
 std::vector<std::string> methods;
-for(std::vector<std::vector<Pixel> >::iterator pattern = patterns.begin(); pattern != patterns.end(); ++pattern) {
+for(std::vector<std::vector<Pixel_d> >::iterator pattern = patterns.begin(); pattern != patterns.end(); ++pattern) {
 
   interpreter.set_pattern(*pattern);
-  methods.push_back("no_interp");
+  /*methods.push_back("no_interp");
   output_images.push_back(interpreter.no_interpretation());
+  */
   methods.push_back("voronoi");
   output_images.push_back(interpreter.voronoi());
   methods.push_back("prox2_2");
+  /*
   output_images.push_back(interpreter.naive_proximity(2,2));
   methods.push_back("shadowa");
   output_images.push_back(interpreter.shadow_proximity(0));
@@ -70,6 +73,7 @@ for(std::vector<std::vector<Pixel> >::iterator pattern = patterns.begin(); patte
   output_images.push_back(interpreter.area_only_proximity(1));
   methods.push_back("areaandprox1");
   output_images.push_back(interpreter.area_and_proximity(1));
+  */
 
 }
 

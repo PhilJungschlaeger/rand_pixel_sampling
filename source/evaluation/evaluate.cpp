@@ -48,7 +48,7 @@ public:
         double error=0;
         for (int c=0; c<3; c++)
         {
-          error+=abs(((double)_Ref_image.at<Vec3b>(Point(x,y))[c])-image.at<Vec3d>(Point(x,y))[c]);
+          error+=abs(((double)_Ref_image.at<Vec3d>(Point(x,y))[c])-image.at<Vec3d>(Point(x,y))[c]);
         }
         sum+=error;
         if(error<255)
@@ -122,7 +122,7 @@ public:
         double error=0;
         for (int c=0; c<3; c++)
         {
-          error+=pow(_Ref_image.at<Vec3b>(Point(x,y))[c]-image.at<Vec3d>(Point(x,y))[c],2);
+          error+=pow(_Ref_image.at<Vec3d>(Point(x,y))[c]-image.at<Vec3d>(Point(x,y))[c],2);
         }
         error=sqrt(error);
         sum+=error;
