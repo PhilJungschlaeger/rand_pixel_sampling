@@ -17,6 +17,6 @@ add_executable(evaluate_picture source/evaluate_picture.cpp source/pixel.cpp sou
 target_link_libraries( evaluate_picture ${OpenCV_LIBS} )
 
 
-add_executable(loop_analysis source/interception.cpp source/pixel.cpp source/sampling/sample.cpp source/interpretation/interpret.cpp source/evaluation/evaluate.cpp)
+add_executable(loop_analysis source/loop_analysis.cpp source/pixel.cpp source/sampling/sample.cpp source/interpretation/interpret.cpp source/evaluation/evaluate.cpp)
 target_link_libraries( loop_analysis ${OpenCV_LIBS} )
 
