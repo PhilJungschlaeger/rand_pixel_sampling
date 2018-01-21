@@ -5,88 +5,181 @@
 #include <opencv2/opencv.hpp> //image operations
 #include <string>
 #include "pixel.hpp"
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+
 
 using namespace cv;
+/*
+pipe-todo:
+-store sample txt [ready?]
+-eval.txt fine? \t abs
+-interpolation methods in vector(lambda..)
+
+integrate:
+-GRID
+-HEXA
+-Halton
+-ssim
+-cw-ssim
+-error-distribution-map
+
+-find: which interpolations!?
+-bigger reference images!?
+
+Evaluation Pipeline:
+  1.IMAGES                                                               +
+  Is there a dependency towards the image?
+
+  2.SAMPLE AMOUNTS
+  Is there a dependency towards the Sample Amount?
+      ->sampleamount should be << reference IMAGES
+
+  3.SAMPLE TECHNIQUES
+  Grid vs. Hexa vs. Rand. vs Halton
+
+  4.INTERPRETATION TECHNIQUES
+  Which interpreation technique is best?
+      -> Voronoi is the common way to interpret an image
+      -> But Splatting and Proximity might give more
+
+  5.QUALITY ASSESMENT
+  eye(features, characteristics), naive error, ssim, cw-ssim)
+
+GOAL 1:   "We want to see, wether a random sample-pattern is better than
+          the common grid sampling!"
+          ->Is this the case for all images, sample amounts,
+            interpreation techniques and evaluation techniques?
+          RESULTS:
+            -GRID needs a fitting sample-amount! Random can take any!
+
+GOAL 2:   "Which Interpretation Technique is best? Is there a dependency
+          to a certain kind of image?"
+          ->loop technique?!
+
+*/
+
+//Get files of input folder:
+void getdir (std::string dir, std::vector<std::string> &files)
+{
+    DIR *dp;
+    struct dirent *dirp;
+    if((dp  = opendir(dir.c_str())) == NULL) {
+        std::cout << "Error(" << errno << ") opening " << dir << std::endl;
+        //return errno;
+    }
+
+    while ((dirp = readdir(dp)) != NULL) {
+        files.push_back(std::string(dirp->d_name));
+    }
+    closedir(dp);
+}
 
 int main(int argc, char** argv )
 {
-  /*
-  Im folgenden wird verglichen welches Verfahren am meisten Informationen vom
-  ursprungsbild interpoliert.
-  einfache zufallsverteilung oder gridverteilung oder ...
-  */
-  //SAMPLING
-  int samples_amount=102400;//1024000; //25%
+std::cout<<".........................................\n";
+std::cout<<"Preperation_Start:.......................\n";
 
-  Mat image;
+//REFERENCE IMAGES:.............................................................
+  std::cout<<"loading reference images\n"
+  std::vector<std::pair<std::string,Mat> > ref_images;                          //stores double-Referenze Images
+  std::string dir = argv[1];                                                    //Inputfolder-path
+  std::vector<std::string> files = std::vector<std::string>();                  //stores path to Ref-Images
+  getdir(dir,files);                                                            //->gets the pathes
 
-  std::string input= argv[1];
-  Mat input_img=imread( input,1);
-  Mat input_image;
-  input_img.convertTo(input_image, CV_64FC3);
-  std::size_t pos = input.find(".");      // position of "live" in str
-  std::string name = std::string(input.substr (0,pos));
-  std::cout<<"ref_image: "<<name<<"\n";
-  std::cout<<"samples: "<<samples_amount<<"\n";
-  name+=samples_amount;
-  if ( !input_image.data )
-  {
-      std::cout<<"found no image data \n";
-      return -1;
+  cv::Mat image_l;
+  for (unsigned int i = 0;i < files.size();i++) {                               //load images.
+      image_l = cv::imread(dir+"/"+files[i], 1 );
+      if ( image_l.data )
+      {
+          Mat image_d;
+          std::cout << dir+files[i] << std::endl;
+          image_l.convertTo(image_d, CV_64FC3);                                 //we want double images!!
+          ref_images.push_back(std::pair<std::string,Mat>(files[i],image_d));
+      }
   }
+  std::cout<<"loading of reference images done\n"
+////////////////////////////////////////////////////////////////////////////////
 
-//01. SAMPLING
-  std::cout<<"\n01.°°°°°°°°°°°°°°°°°°°°°°°°SAMPLING\n";
-  Sampler sampler(samples_amount, input_image);
-  std::vector<std::vector<Pixel_d> > patterns;
-  //patterns.push_back(sampler.calc_grid()); //0:GRID
-  patterns.push_back(sampler.calc_rand_d()); //1:RAND
+//SAMPLE AMOUNTS:...............................................................
+  std::cout<<"preparing sample amounts\n"
+  std::vector<int> sample_amounts;
+  int ref_samples=ref_images[0].second.cols*ref_images[0].second.rows;
+  /*ACHTUNG, wähle für das GRID-Sampling fair!*/
+  std::cout<<"ACHTUNG: Das GRID-Image braucht eine faire Sample-Anzahl!\n";     //3000*2000 =100%
+
+  sample_amounts.push_back(ref_samples*0.5*0.5);                                //1500* 1000  =25%
+  sample_amounts.push_back(ref_samples*0.5*0.5*0.5*0.5);                        //750*  500   =6.25%
+  sample_amounts.push_back(ref_samples*0.5*0.5*0.5*0.5*0.5*0.5);                //375*  250   =1.5625%
+  std::cout<<"preparing sample amounts done\n"
+////////////////////////////////////////////////////////////////////////////////
+
+//ANALYSIS.txt..:...............................................................
+std::cout<<"preparing analysis.txt\n"
+std::string analysis_doc="analysis.txt";
+std::fstream file(analysis_doc.c_str(), std::ios::out);
+std::cout<<"preparing analysis.txt done\n"
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+std::cout<<".........................................\n";
+std::cout<<"Calculation_Start:.......................\n";
+int img_id=0;
+//CALCULATION:
+
+  //voronoi:                "basic interpretation: best detail"
+  std::cout<<"VORONOI\n";
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      //!!!! pair: für benennung
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: XXX \n";
+
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //patterns.push_back(sampler.calc_grid());    //0:GRID
+      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      std::cout<<"here\n";
+      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+        file <<img_id<<": ";
+        interpreter.set_pattern((*pattern).second);
+        Mat output = interpreter.voronoi();
+        imwrite("result_"+std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
+        //-> store pattern.txt
+        //-> store evaluation.txt
+        Mat eval_out=evaluator.evaluate_abs(output,file);
+        imwrite("eval_"+std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        img_id++;
+        file <<"\n";
+      }
+    }
+  }
+  //s_proximity: (2)        "smallest total error"
+
+  //area&s_proximity:       "smallest amount of completly wrong"
+
+  //delaunay:               "-"
+
+  //splatting:              "-"
+
+  //splatting-voronoi:     "-"
+
+  //splatting-s_proximity: "."
+
   //...
 
-//02. INTERPRETATION
-std::cout<<"\n02.°°°°°°°°°°°°°°°°°°°°°°°°INTERPRETATION\n";
-std::vector<Mat> output_images;
-Interpreter interpreter(input_image.cols,input_image.rows);
-std::vector<std::string> methods;
-for(std::vector<std::vector<Pixel_d> >::iterator pattern = patterns.begin(); pattern != patterns.end(); ++pattern) {
 
-  interpreter.set_pattern(*pattern);
-  /*methods.push_back("no_interp");
-  output_images.push_back(interpreter.no_interpretation());
-  */
-  methods.push_back("voronoi");
-  output_images.push_back(interpreter.voronoi());
-  methods.push_back("prox2_2");
-  /*
-  output_images.push_back(interpreter.naive_proximity(2,2));
-  methods.push_back("shadowa");
-  output_images.push_back(interpreter.shadow_proximity(0));
-  methods.push_back("shadowb");
-  output_images.push_back(interpreter.shadow_proximity(1));
-  methods.push_back("shadowc");
-  output_images.push_back(interpreter.shadow_proximity(2));
-  methods.push_back("areaonly0");
-  output_images.push_back(interpreter.area_only_proximity(0));
-  methods.push_back("areaandprox0");
-  output_images.push_back(interpreter.area_and_proximity(0));
-  methods.push_back("areaonly1");
-  output_images.push_back(interpreter.area_only_proximity(1));
-  methods.push_back("areaandprox1");
-  output_images.push_back(interpreter.area_and_proximity(1));
-  */
-
-}
-
-//03. EVALUATION
-std::cout<<"\n03.°°°°°°°°°°°°°°°°°°°°°°°°EVALUATION\n";
-Evaluator evaluator(input_image);
-for(int i=0; i<output_images.size(); i++) {
-  std::cout<<i<<" "<<methods[i]<<"\n";
-  Mat out=evaluator.evaluate_abs(output_images[i]);
-  imwrite("b"+std::string("eval_abs_")+std::string(methods[i])+".jpg",out);
-  //imwrite("a"+std::string(methods[i])+std::string("eval_3d_")+".jpg",evaluator.evaluate_abs(output_images[i]));
-  imwrite("b"+std::string("output")+std::string(methods[i])+".jpg", output_images[i] );
-}
-
-
+  file.close();
 }

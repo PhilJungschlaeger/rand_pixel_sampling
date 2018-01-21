@@ -49,6 +49,7 @@ public:
     //srand(time(NULL));  //SEED
     for (int i=0; i<_Amount; i++)
     {
+
       int n= rand()% not_sampled_yet.size();
       pix.x= not_sampled_yet[n].first;
       pix.y= not_sampled_yet[n].second;
@@ -78,6 +79,7 @@ public:
 
     for (int i=0; i<_Amount; i++)
     {
+      //std::cout<<i<<"\n";
       int n= rand()% not_sampled_yet.size();
       pix.x= not_sampled_yet[n].first;
       pix.y= not_sampled_yet[n].second;

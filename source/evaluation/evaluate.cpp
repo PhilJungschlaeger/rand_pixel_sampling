@@ -14,7 +14,7 @@ public:
       _Ref_image(ref_image)
       {}
 
-  Mat evaluate_abs(Mat const& image)
+  Mat evaluate_abs(Mat const& image, std::fstream & stream)
   {
     //red is wrong
     double max=255*3;
@@ -24,14 +24,16 @@ public:
     std::vector<std::pair<double,int> > borders;
     double val=0.0;
     double step=0.002;
-    borders.push_back(std::pair<double,int>(0,0));
+    borders.push_back(std::pair<double,int>(0,0));    //correct Pixel
+    /*
     borders.push_back(std::pair<double,int>(0.001,0));
     borders.push_back(std::pair<double,int>(0.002,0));
     borders.push_back(std::pair<double,int>(0.005,0));
     borders.push_back(std::pair<double,int>(0.01,0));
     borders.push_back(std::pair<double,int>(0.1,0));
-    borders.push_back(std::pair<double,int>(0.5,0));
-    borders.push_back(std::pair<double,int>(1.0,0));
+    */
+    borders.push_back(std::pair<double,int>(0.5,0));  //inbetween
+    borders.push_back(std::pair<double,int>(1.0,0));  //bad Pixel
     /*
     while(val<1.0)
     {
@@ -89,6 +91,7 @@ public:
       }
     }
     std::cout<<"error_abs:"<<sum<<"\n";
+    stream<<"\tsum:"<<sum;
     int total=0;
     //std::vector<Mat> eval(1280,border.size(), CV_64FC3, Scalar(0,0,0));
 
@@ -103,6 +106,7 @@ public:
       }
       coll++;*/
       std::cout<<"better than: "<<(*o).first<<": "<<total<<"got:"<<(*o).second<<"\n";
+      stream<<"\t"<<(*o).first<<": "<<(*o).second;
     }
     return output;
   }

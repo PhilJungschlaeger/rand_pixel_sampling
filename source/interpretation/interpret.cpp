@@ -12,8 +12,8 @@ public:
   Interpreter(int X, int Y):
       _X(X),
       _Y(Y),
-      _X_Buckets(32), //maybe clever function?
-      _Y_Buckets(18)  //clever function?
+      _X_Buckets(512), //maybe clever function?    //40 ist gut!?
+      _Y_Buckets(320)  //clever function?
       {}
 
       //no INTERPRETATION
@@ -80,7 +80,7 @@ public:
           {
             if(!_Check_pic.at<Vec3b>(Point(x,y))[0]) // if not allready sampled:
             {
-              std::cout<<"x "<<x<<" y "<<y<<"\n";
+             //std::cout<<"x "<<x<<" y "<<y<<"\n";
             std::list<std::vector<double> > nec_points;    //neccesseray points
               closest_points(x, y,count, nec_points); //get closest_points
 
@@ -313,7 +313,7 @@ public:
             }
           }
         }
-        std::cout<<"not_painnt: "<<not_paint<<"\n";
+        //std::cout<<"not_painnt: "<<not_paint<<"\n";
         return output;
       }
       //////////////////////////////////////
@@ -674,7 +674,7 @@ public:
       void set_pattern(std::vector<Pixel_d>& pattern){
         _Pattern=pattern;
         _Buckets=std::vector<std::vector<Pixel_d> >();
-        std::cout<<_Pattern.size()<<"psize.....\n";
+        //std::cout<<_Pattern.size()<<"psize.....\n";
          _Check_pic=Mat(_Y, _X, CV_8UC3, Scalar(0,0,0));//might be changed to a 2D array of booleans?
         //Prepare Buckets:
         /*correct image scale? */

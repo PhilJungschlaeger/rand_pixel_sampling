@@ -13,7 +13,7 @@ find_package(OpenCV)
 
 include_directories(include)
 
-add_executable(evaluate_picture source/evaluate_picture.cpp source/pixel.cpp source/sampling/sample.cpp source/interpretation/interpret.cpp source/evaluation/evaluate.cpp)
+add_executable(evaluate_picture source/rsf_writer.hpp source/rsf_writer.cpp source/evaluate_picture.cpp source/pixel.cpp source/sampling/sample.cpp source/interpretation/interpret.cpp source/evaluation/evaluate.cpp)
 target_link_libraries( evaluate_picture ${OpenCV_LIBS} )
 
 
