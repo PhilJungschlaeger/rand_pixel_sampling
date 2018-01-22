@@ -12,8 +12,8 @@ public:
   Interpreter(int X, int Y):
       _X(X),
       _Y(Y),
-      _X_Buckets(512), //maybe clever function?    //40 ist gut!?
-      _Y_Buckets(320)  //clever function?
+      _X_Buckets(300), //maybe clever function?    //40 ist gut!?
+      _Y_Buckets(200)  //clever function?
       {}
 
       //no INTERPRETATION
@@ -146,7 +146,7 @@ public:
                 {
                   power=nec_points.size();
                 }else{
-                  power=nec_points.size()*nec_points.size();
+                  power=nec_points.size()*2;
                 }
 
               }//shadow<
@@ -261,7 +261,7 @@ public:
                   }
                   if(ang_sum!=360)
                   {
-                    std::cout<<"angsum:      "<<ang_sum<<"\n";
+                    //std::cout<<"angsum:      "<<ang_sum<<"\n";
                   }
 
 
