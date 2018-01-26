@@ -27,6 +27,96 @@ public:
     }
     return output;
   }
+
+  Mat delaunay(){
+    std::cout<<"delaunay\n";
+    Mat output=_no_interpret;
+    std::vector<Point2f> points;
+    // This is how you can add one point.
+
+    for(std::vector<Pixel_d>::iterator p = _Pattern.begin(); p != _Pattern.end(); ++p)
+    {
+        points.push_back(Point2f(p->x,p->y));
+    }
+
+    Rect rect(0, 0, _X, _Y);
+    Subdiv2D subdiv(rect);
+    std::cout<<"ins\n";
+    //int count=0;
+    for( std::vector<Point2f>::iterator it = points.begin(); it != points.end(); it++)
+    {
+      //std::cout<<"count"<<count<<"\n";
+        subdiv.insert(*it);
+        //count++;
+    }
+    std::vector<Vec6f> triangleList;
+    std::cout<<"sub\n";
+    subdiv.getTriangleList(triangleList);
+    std::vector<Point> pt(3);
+
+    std::cout<<triangleList.size()<<"tri\n";
+    for( size_t i = 0; i < triangleList.size(); i++ )
+    {
+
+      Vec6f t = triangleList[i];
+      pt[0] = Point(cvRound(t[0]), cvRound(t[1]));
+      pt[1] = Point(cvRound(t[2]), cvRound(t[3]));
+      pt[2] = Point(cvRound(t[4]), cvRound(t[5]));
+      if ( rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2]))
+      {
+        //get colors
+        Vec3d color0=_no_interpret.at<Vec3d>(pt[0]);
+        Vec3d color1=_no_interpret.at<Vec3d>(pt[1]);
+        Vec3d color2=_no_interpret.at<Vec3d>(pt[2]);
+
+      //  Polygon poly = np.array([pt1,pt2,pt3], np.int)
+        Vec3d avColor = (color0+color1+color2)/3.0f;
+
+        //avColor = (int(avColor[0]),int(avColor[1]),int(avColor[2]))
+        fillConvexPoly(output,pt, avColor, 8, 0);
+        /*
+        c1 = self.data[pt1]
+        c1 = (int(c1[0]),int(c1[1]),int(c1[2]))
+        c2 = self.data[pt2]
+        c2 = (int(c2[0]),int(c2[1]),int(c2[2]))
+        c3 = self.data[pt3]
+        c3 = (int(c2[0]),int(c2[1]),int(c2[2]))
+        cv2.circle(img, pt1, 3, c1, -1, cv2.LINE_AA, 0)
+        cv2.circle(img, pt2, 3, c2, -1, cv2.LINE_AA, 0)
+      cv2.circle(img, pt3, 3, c3, -1, cv2.LINE_AA, 0)
+      */
+      //
+      }
+
+
+  }
+  return output;
+}
+/*
+triangles = self.subdiv.getTriangleList()
+size = img.shape
+r = (0, 0, size[1], size[0])
+for t in triangles:
+ pt1 = (int(t[0]), int(t[1]))
+ pt2 = (int(t[2]), int(t[3]))
+ pt3 = (int(t[4]), int(t[5]))
+ if inRect(r, pt1) and inRect(r, pt2) and inRect(r, pt3):
+   c = (self.data[pt1],self.data[pt2],self.data[pt3])
+   poly = np.array([pt1,pt2,pt3], np.int)
+   avColor = avgRGB(c[0],c[1],c[2])
+   avColor = (int(avColor[0]),int(avColor[1]),int(avColor[2]))
+   cv2.fillConvexPoly(img, poly, avColor, cv2.LINE_AA, 0);
+   c1 = self.data[pt1]
+   c1 = (int(c1[0]),int(c1[1]),int(c1[2]))
+   c2 = self.data[pt2]
+   c2 = (int(c2[0]),int(c2[1]),int(c2[2]))
+   c3 = self.data[pt3]
+   c3 = (int(c2[0]),int(c2[1]),int(c2[2]))
+   cv2.circle(img, pt1, 3, c1, -1, cv2.LINE_AA, 0)
+   cv2.circle(img, pt2, 3, c2, -1, cv2.LINE_AA, 0)
+cv2.circle(img, pt3, 3, c3, -1, cv2.LINE_AA, 0)
+*/
+
       //voronoi
       Mat voronoi(){
         return naive_proximity(1,1);
@@ -316,6 +406,8 @@ public:
         //std::cout<<"not_painnt: "<<not_paint<<"\n";
         return output;
       }
+
+
       //////////////////////////////////////
       /*
       ermittelt für einen pixel x,y, die count-viele nächste sample-punkte(aus _Buckets)
@@ -697,6 +789,7 @@ public:
           _Buckets[N].push_back(*i);
           _Check_pic.at<Vec3b>(Point((*i).x, (*i).y))[0]=100; //already sampled
         }
+        _no_interpret=no_interpretation();
       }
 
 private:
@@ -706,6 +799,7 @@ private:
   int _Y_Buckets;
   std::vector<Pixel_d> _Pattern;
   std::vector<std::vector<Pixel_d> > _Buckets;
+  Mat _no_interpret;
   Mat _Check_pic;
 };
 

@@ -9,7 +9,6 @@
 #include <dirent.h>
 #include <errno.h>
 
-
 using namespace cv;
 /*
 pipe-todo:
@@ -135,6 +134,51 @@ std::cout<<"Calculation_Start:.......................\n";
 int img_id=0;
 //CALCULATION:
 
+  //voronoi:
+  std::cout<<"DELAUNAY\n";
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      //!!!! pair: für benennung
+
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: "+ref_image_name+"\n";
+
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //patterns.push_back(sampler.calc_grid());    //0:GRID
+      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      std::cout<<"here\n";
+      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      Mat output;
+      Mat eval_out;
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+
+        std::cout<<"in_again\n";
+        file <<img_id<<": ";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.delaunay();
+        imwrite("result_"+std::to_string(img_id)+"delaun"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
+        //-> store pattern.txt
+        //-> store evaluation.txt
+        eval_out=evaluator.evaluate_abs(output,file);
+        //evaluator.evaluate_ssim(output,file);
+        imwrite("eval_"+std::to_string(img_id)+"delaun"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        img_id++;
+        file <<"\n";
+        std::cout<<"here\n";
+
+      }
+      std::cout<<"after \n";
+    }
+  }
   //voronoi:                "basic interpretation: best detail"
   std::cout<<"VORONOI\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
@@ -225,7 +269,7 @@ int img_id=0;
       std::cout<<"after \n";
     }
   }
-
+/*
   //area&s_proximity0:       "smallest amount of completly wrong+small total error"
   std::cout<<"AREA&PROX0\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
@@ -281,7 +325,7 @@ int img_id=0;
   //splatting-s_proximity: "."
 
   //...
-
+*/
 
   file.close();
 }
