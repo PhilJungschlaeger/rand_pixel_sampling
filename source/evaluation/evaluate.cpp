@@ -264,7 +264,7 @@ public:
       }
     }
     std::cout<<"error_abs:"<<sum<<"\n";
-    stream<<"\tsum:"<<sum;
+    stream<<"\tsum:"<<sum<<"\t";
     int total=0;
     //std::vector<Mat> eval(1280,border.size(), CV_64FC3, Scalar(0,0,0));
 
