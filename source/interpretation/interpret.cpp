@@ -790,6 +790,7 @@ cv2.circle(img, pt3, 3, c3, -1, cv2.LINE_AA, 0)
           _Check_pic.at<Vec3b>(Point((*i).x, (*i).y))[0]=100; //already sampled
         }
         _no_interpret=no_interpretation();
+        std::cout<<"Pattern has:"<<_Pattern.size()<<"samples\n";
       }
 
 private:

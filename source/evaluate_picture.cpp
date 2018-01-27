@@ -126,7 +126,10 @@ std::cout<<"Preperation_Start:.......................\n";
 //ANALYSIS.txt..:...............................................................
 std::cout<<"preparing analysis.txt\n";
 std::string analysis_doc="analysis.txt";
-std::fstream file(analysis_doc.c_str(), std::ios::out);
+std::fstream file0(analysis_doc.c_str(), std::ios::out );
+file0<<"EVALUATION\n";
+file0.close();
+//std::fstream file(analysis_doc.c_str(), std::ios::app);
 std::cout<<"preparing analysis.txt done\n";
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +158,7 @@ int img_id=0;
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       std::cout<<"here\n";
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
@@ -166,6 +169,7 @@ int img_id=0;
       {
 
         std::cout<<"in_again\n";
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
         file <<img_id<<": ";
         interpreter.set_pattern((*pattern).second);
         output = interpreter.delaunay();
@@ -198,10 +202,11 @@ int img_id=0;
 
       Sampler sampler(*sample_amount,ref_image_img);
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      std::cout<<"here\n";
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+
+
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
@@ -209,7 +214,7 @@ int img_id=0;
       Mat eval_out;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
-
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
         std::cout<<"in_again\n";
         file <<img_id<<": ";
         interpreter.set_pattern((*pattern).second);
@@ -222,6 +227,7 @@ int img_id=0;
         imwrite("eval_"+std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
         img_id++;
         file <<"\n";
+        file.close();
         std::cout<<"here\n";
 
       }
@@ -245,7 +251,10 @@ int img_id=0;
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
       //patterns.push_back(sampler.calc_grid());    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
+      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+
       std::cout<<"here\n";
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
@@ -254,7 +263,7 @@ int img_id=0;
       Mat eval_out;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
-
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
         std::cout<<"in_again\n";
         file <<img_id<<": ";
         interpreter.set_pattern((*pattern).second);
@@ -268,7 +277,7 @@ int img_id=0;
         img_id++;
         file <<"\n";
         std::cout<<"here\n";
-
+        file.close();
       }
       std::cout<<"after \n";
     }
@@ -331,5 +340,5 @@ int img_id=0;
   //...
 */
 
-  file.close();
+
 }
