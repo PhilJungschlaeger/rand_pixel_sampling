@@ -36,10 +36,10 @@ public:
       {
         pix.x = x;
         pix.y = y;
-        pix.color = _Image.at<Vec3b>(Point(pix.x,pix.y));
+        pix.color = _Image.at<Vec3d>(Point(pix.x,pix.y));
         output_pattern.push_back(pix);
       }
-    }     
+    }
     return output_pattern;
   }
 
@@ -48,7 +48,7 @@ public:
     _Image=image;
   }
 
-  
+
 
   std::vector<Pixel>  calc_rand(){
     std::cout<<"sampling random\n";
