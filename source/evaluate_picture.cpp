@@ -156,11 +156,11 @@ int img_id=0;
 
       Sampler sampler(*sample_amount,ref_image_img);
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       std::cout<<"here\n";
-      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;
@@ -202,12 +202,12 @@ int img_id=0;
 
       Sampler sampler(*sample_amount,ref_image_img);
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
 
 
-      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;

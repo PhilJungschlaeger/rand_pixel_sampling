@@ -43,6 +43,43 @@ public:
     return output_pattern;
   }
 
+  std::vector<Pixel_d>  calc_halton(){
+    std::cout<<"sampling halton\n";
+    std::vector<Pixel_d> output_pattern;
+
+    //SAMPLING
+    cv::Size size = _Image.size();
+    int p = 2; int q = 3;
+    Pixel_d pix;
+
+    for (int i=1; i<_Amount+1; i++)
+    {
+      double fx = 1; double fy = 1; 
+      int ix = i; int iy = i; 
+      double rx = 0; double ry = 0;
+
+      while (ix > 0) {
+      	fx /= p;
+      	rx += fx * (ix % p);
+      	ix = ix / p;
+      }
+
+      while (iy > 0) {
+      	fy /= q;
+      	ry += fy * (iy % q);
+      	iy = iy / q;
+      }
+      double x = rx * size.width;
+      double y = ry * size.height;
+      pix.x= x;
+      pix.y= y;
+      pix.color = _Image.at<Vec3d>(Point(pix.x,pix.y));
+
+      output_pattern.push_back(pix);
+    }
+    return output_pattern;
+  }
+
   //expects CV_8UC3 image!
   void set_image(Mat const& image){
     _Image=image;
