@@ -2,6 +2,7 @@
 #include <opencv2/opencv.hpp> //image operations
 #include "../pixel.hpp"
 #include <time.h>             //time measuring & seed
+#include <math.h>             //ceil, sqrt etc
 
 
 using namespace cv;
@@ -18,12 +19,30 @@ public:
         _Y=_Image.rows;
       }
 
-  /*
-  std::vector<Pixel>  calc_grid(){
+  std::vector<Pixel_d>  calc_grid(){
     std::cout<<"sampling grid\n";
-    NOT YET IMPLEMENTED
+    std::vector<Pixel_d> output_pattern;
+
+    //SAMPLING
+    cv::Size size = _Image.size();
+    Pixel_d pix;
+    double count = std::ceil(std::sqrt(_Amount));
+    std::cout<<count<<std::endl;
+    int y_spacing = (int)std::max(std::ceil(size.height/count),1.0);
+    int x_spacing = (int)std::max(std::ceil(size.width/count),1.0);
+    std::cout<<std::ceil(size.height/count)<<std::endl;
+    for(int y=0; y<size.height; y+=y_spacing)
+    {
+      for(int x=0; x<size.width; x+=y_spacing)
+      {
+        pix.x = x;
+        pix.y = y;
+        pix.color = _Image.at<Vec3b>(Point(pix.y,pix.x));
+        output_pattern.push_back(pix);
+      }
+    }     
+    return output_pattern;
   }
-  */
 
   //expects CV_8UC3 image!
   void set_image(Mat const& image){
