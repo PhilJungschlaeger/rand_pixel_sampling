@@ -142,6 +142,7 @@ int img_id=0;
 //CALCULATION:
 
   //voronoi:
+  /*
   std::cout<<"DELAUNAY\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
@@ -160,6 +161,10 @@ int img_id=0;
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
       //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       std::cout<<"here\n";
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
+      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
@@ -187,6 +192,7 @@ int img_id=0;
       std::cout<<"after \n";
     }
   }
+  */
   //voronoi:                "basic interpretation: best detail"
   std::cout<<"VORONOI\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
@@ -205,8 +211,9 @@ int img_id=0;
       //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
       //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-
-
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
+      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
@@ -217,18 +224,21 @@ int img_id=0;
         std::fstream file(analysis_doc.c_str(), std::ios::app);
         std::cout<<"in_again\n";
         file <<img_id<<": ";
+        std::string name=std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.voronoi();
-        imwrite("result_"+std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
+        output = interpreter.shadow_proximity(2);
+        imwrite("result_"+name+".jpg",output);
         //-> store pattern.txt
         //-> store evaluation.txt
         eval_out=evaluator.evaluate_abs(output,file);
         //evaluator.evaluate_ssim(output,file);
-        imwrite("eval_"+std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
+        file <<"||";
+        file <<name;
         file <<"\n";
-        file.close();
         std::cout<<"here\n";
+        file.close();
 
       }
       std::cout<<"after \n";
@@ -254,6 +264,7 @@ int img_id=0;
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
       patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
 
       std::cout<<"here\n";
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
@@ -276,7 +287,9 @@ int img_id=0;
         //evaluator.evaluate_ssim(output,file);
         imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
-        file <<"||"<<name<<"\n";
+        file <<"||";
+        file <<name;
+        file <<"\n";
         std::cout<<"here\n";
         file.close();
       }
