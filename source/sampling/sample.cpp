@@ -27,17 +27,16 @@ public:
     cv::Size size = _Image.size();
     Pixel_d pix;
     double count = std::ceil(std::sqrt(_Amount));
-    std::cout<<count<<std::endl;
     int y_spacing = (int)std::max(std::ceil(size.height/count),1.0);
     int x_spacing = (int)std::max(std::ceil(size.width/count),1.0);
-    std::cout<<std::ceil(size.height/count)<<std::endl;
-    for(int y=0; y<size.height; y+=y_spacing)
+    std::cout<<size.height<<std::endl;
+    for(int x=0; x<size.width; x+=y_spacing)
     {
-      for(int x=0; x<size.width; x+=y_spacing)
+      for(int y=0; y<size.height; y+=y_spacing)
       {
         pix.x = x;
         pix.y = y;
-        pix.color = _Image.at<Vec3b>(Point(pix.y,pix.x));
+        pix.color = _Image.at<Vec3b>(Point(pix.x,pix.y));
         output_pattern.push_back(pix);
       }
     }     
