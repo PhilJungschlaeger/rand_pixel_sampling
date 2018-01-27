@@ -266,16 +266,17 @@ int img_id=0;
         std::fstream file(analysis_doc.c_str(), std::ios::app);
         std::cout<<"in_again\n";
         file <<img_id<<": ";
+        std::string name=std::to_string(img_id)+"shadow_proximity2"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.shadow_proximity(2);
-        imwrite("result_"+std::to_string(img_id)+"shadow_proximity2"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
+        imwrite("result_"+name+".jpg",output);
         //-> store pattern.txt
         //-> store evaluation.txt
         eval_out=evaluator.evaluate_abs(output,file);
         //evaluator.evaluate_ssim(output,file);
-        imwrite("eval_"+std::to_string(img_id)+"shadow_proximity2"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
-        file <<"\n";
+        file <<"||"<<name<<"\n";
         std::cout<<"here\n";
         file.close();
       }
