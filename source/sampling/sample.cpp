@@ -30,6 +30,8 @@ public:
     _Image=image;
   }
 
+  
+
   std::vector<Pixel>  calc_rand(){
     std::cout<<"sampling random\n";
     std::vector<Pixel> output_pattern;
@@ -60,6 +62,7 @@ public:
     }
     return output_pattern;
   }
+
   std::vector<Pixel_d>  calc_rand_d(){
     std::cout<<"sampling random\n";
     std::vector<Pixel_d> output_pattern;

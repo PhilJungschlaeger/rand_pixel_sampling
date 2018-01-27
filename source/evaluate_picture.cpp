@@ -94,13 +94,18 @@ std::cout<<"Preperation_Start:.......................\n";
 
   cv::Mat image_l;
   for (unsigned int i = 0;i < files.size();i++) {                               //load images.
-      image_l = cv::imread(dir+"/"+files[i], 1 );
-      if ( image_l.data )
+      if(((std::string(".")).compare(files[i]) != 0) && ((std::string("..")).compare(files[i]) != 0) )
       {
-          Mat image_d;
-          std::cout << dir+files[i] << std::endl;
-          image_l.convertTo(image_d, CV_64FC3);                                 //we want double images!!
-          ref_images.push_back(std::pair<std::string,Mat>(files[i],image_d));
+        image_l = cv::imread(dir+"/"+files[i], 1 );
+        if ( image_l.data )
+        {
+            Mat image_d;
+            std::cout << dir+files[i] << std::endl;
+            image_l.convertTo(image_d, CV_64FC3);                                 //we want double images!!
+            ref_images.push_back(std::pair<std::string,Mat>(files[i],image_d));
+        }
+      }else{
+        std::cout<<"exlude!?:"<<files[i]<<"\n";
       }
   }
   std::cout<<"loading of reference images done\n";
