@@ -90,11 +90,12 @@ std::cout<<"Preperation_Start:.......................\n";
   std::vector<std::pair<std::string,Mat> > ref_images;                          //stores double-Referenze Images
   std::string dir = argv[1];                                                    //Inputfolder-path
   std::vector<std::string> files = std::vector<std::string>();                  //stores path to Ref-Images
-  getdir(dir,files);                                                            //->gets the pathes
-
+  getdir(dir,files);               
   cv::Mat image_l;
   for (unsigned int i = 0;i < files.size();i++) {                               //load images.
+      std::cout<<files[i];
       image_l = cv::imread(dir+"/"+files[i], 1 );
+
       if ( image_l.data )
       {
           Mat image_d;
@@ -149,9 +150,9 @@ int img_id=0;
 
       Sampler sampler(*sample_amount,ref_image_img);
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(sampler.calc_grid());    //0:GRID
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       std::cout<<"here\n";
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
@@ -194,9 +195,9 @@ int img_id=0;
 
       Sampler sampler(*sample_amount,ref_image_img);
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(sampler.calc_grid());    //0:GRID
+      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));
       //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
       std::cout<<"here\n";
       //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
