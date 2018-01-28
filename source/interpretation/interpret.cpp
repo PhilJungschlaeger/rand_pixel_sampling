@@ -31,6 +31,7 @@ public:
   Mat splat_over(Mat img,int radius)
   {
       //only simple splat!!
+      std::cout<<"radius:"<<radius<<"\n";
     for(std::vector<Pixel_d>::iterator i = _Pattern.begin(); i != _Pattern.end(); ++i) {
       Point pt((*i).x,(*i).y);
       Vec3d color=(*i).color;

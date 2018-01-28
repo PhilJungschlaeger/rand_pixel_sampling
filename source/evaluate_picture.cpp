@@ -10,6 +10,7 @@
 #include <errno.h>
 
 using namespace cv;
+
 /*
 pipe-todo:
 -store sample txt (maybe later)
@@ -78,6 +79,7 @@ void getdir (std::string dir, std::vector<std::string> &files)
 
 int main(int argc, char** argv )
 {
+  int splat_radius=1;
 std::cout<<".........................................\n";
 std::cout<<"Preperation_Start:.......................\n";
 
@@ -188,8 +190,18 @@ int img_id=0;
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    if(ref_samples*0.5*0.5==*sample_amount)
+    {
+      splat_radius=1;
+    }else if(ref_samples*0.5*0.5*0.5*0.5==*sample_amount)
+    {
+      splat_radius=2;
+    }else{
+      splat_radius=3;
+    }
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
+
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
@@ -219,7 +231,7 @@ int img_id=0;
         file <<img_id<<": ";
         std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.delaunay_splat(2);
+        output = interpreter.delaunay_splat(splat_radius);
         std::string name=std::to_string(img_id)+"delaunay_ssplat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".jpg",output);
         eval_out=evaluator.evaluate_abs(output,file);
@@ -286,8 +298,18 @@ int img_id=0;
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    if(ref_samples*0.5*0.5==*sample_amount)
+    {
+      splat_radius=1;
+    }else if(ref_samples*0.5*0.5*0.5*0.5==*sample_amount)
+    {
+      splat_radius=2;
+    }else{
+      splat_radius=3;
+    }
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
+
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
@@ -317,7 +339,7 @@ int img_id=0;
         file <<img_id<<": ";
         std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.splat_over(interpreter.voronoi(),2);
+        output = interpreter.splat_over(interpreter.voronoi(),splat_radius);
         std::string name=std::to_string(img_id)+"voronoi_splatt"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".jpg",output);
         eval_out=evaluator.evaluate_abs(output,file);
@@ -385,6 +407,15 @@ int img_id=0;
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    if(ref_samples*0.5*0.5==*sample_amount)
+    {
+      splat_radius=1;
+    }else if(ref_samples*0.5*0.5*0.5*0.5==*sample_amount)
+    {
+      splat_radius=2;
+    }else{
+      splat_radius=3;
+    }
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
       std::string ref_image_name=(*ref_image).first;
@@ -416,7 +447,7 @@ int img_id=0;
         file <<img_id<<": ";
         std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.splat_over(interpreter.shadow_proximity(2),2);
+        output = interpreter.splat_over(interpreter.shadow_proximity(2),splat_radius);
 
         std::string name=std::to_string(img_id)+"shadow_pr_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".jpg",output);
@@ -484,6 +515,15 @@ int img_id=0;
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    if(ref_samples*0.5*0.5==*sample_amount)
+    {
+      splat_radius=1;
+    }else if(ref_samples*0.5*0.5*0.5*0.5==*sample_amount)
+    {
+      splat_radius=2;
+    }else{
+      splat_radius=3;
+    }
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
       std::string ref_image_name=(*ref_image).first;
@@ -515,7 +555,7 @@ int img_id=0;
         file <<img_id<<": ";
         std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.splat_over(interpreter.area_and_proximity(0),2);
+        output = interpreter.splat_over(interpreter.area_and_proximity(0),splat_radius);
         std::string name=std::to_string(img_id)+"area_prox_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".jpg",output);
         eval_out=evaluator.evaluate_abs(output,file);
