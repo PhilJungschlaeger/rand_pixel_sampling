@@ -12,23 +12,20 @@
 using namespace cv;
 /*
 pipe-todo:
--store sample txt [ready?]
--eval.txt fine? \t abs
--interpolation methods in vector(lambda..)
+-store sample txt (maybe later)
+-float sampling/interpolation?
+(interpolation methods in vector(lambda..))
+-bigger reference images!?
+-bigger screen to evaluate via eye!
+-screen has to fit outputresolution
 
 integrate:
--GRID     //artur
--HEXA     //?
--Halton   //artur
--ssim     //phil
--cw-ssim  //?
--error-distribution-map //?
--splatting  //artur
--delaunay   //artur
--combi      //artur+phil
+(-HEXA     //)
+-cw-ssim  //external tool
+(error-distribution-map)
+(splatting  //artur)
+-splatting combi
 
--find: which interpolations!? //phil
--bigger reference images!?
 -always different sampling ... cannot compare diffetrent inteprolations with
 the momentary setting, but this is good to compare patterns!
 
@@ -71,7 +68,6 @@ void getdir (std::string dir, std::vector<std::string> &files)
     struct dirent *dirp;
     if((dp  = opendir(dir.c_str())) == NULL) {
         std::cout << "Error(" << errno << ") opening " << dir << std::endl;
-        //return errno;
     }
 
     while ((dirp = readdir(dp)) != NULL) {
@@ -104,7 +100,7 @@ std::cout<<"Preperation_Start:.......................\n";
             ref_images.push_back(std::pair<std::string,Mat>(files[i],image_d));
         }
       }else{
-        std::cout<<"exlude!?:"<<files[i]<<"\n";
+        //std::cout<<"exlude!?:"<<files[i]<<"\n";
       }
   }
   std::cout<<"loading of reference images done\n";
@@ -129,7 +125,6 @@ std::string analysis_doc="analysis.txt";
 std::fstream file0(analysis_doc.c_str(), std::ios::out );
 file0<<"EVALUATION\n";
 file0.close();
-//std::fstream file(analysis_doc.c_str(), std::ios::app);
 std::cout<<"preparing analysis.txt done\n";
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,81 +135,80 @@ std::cout<<".........................................\n";
 std::cout<<"Calculation_Start:.......................\n";
 int img_id=0;
 //CALCULATION:
-
-  //voronoi:
-  /*
   std::cout<<"DELAUNAY\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
-      //!!!! pair: für benennung
-
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
 
       Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      std::cout<<"here\n";
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
 
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;
       Mat eval_out;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
-
-        std::cout<<"in_again\n";
         std::fstream file(analysis_doc.c_str(), std::ios::app);
         file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
         output = interpreter.delaunay();
-        imwrite("result_"+std::to_string(img_id)+"delaun"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
-        //-> store pattern.txt
-        //-> store evaluation.txt
+        std::string name=std::to_string(img_id)+"delaunay"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        //evaluator.evaluate_ssim(output,file);
-        imwrite("eval_"+std::to_string(img_id)+"delaun"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
+        file <<"\t||";
+        file <<name;
         file <<"\n";
-        std::cout<<"here\n";
-
+        file.close();
       }
-      std::cout<<"after \n";
     }
   }
-  */
-  //voronoi:                "basic interpretation: best detail"
-  std::cout<<"VORONOI\n";
+
+  std::cout<<"DELAUNAY_S_SPLATT\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
-      //!!!! pair: für benennung
-
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
 
       Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      //patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
+
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;
@@ -222,52 +216,97 @@ int img_id=0;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
         std::fstream file(analysis_doc.c_str(), std::ios::app);
-        std::cout<<"in_again\n";
         file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.delaunay_splat(2);
+        std::string name=std::to_string(img_id)+"delaunay_ssplat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
+        eval_out=evaluator.evaluate_abs(output,file);
+        imwrite("eval_"+name+".jpg",eval_out);
+        img_id++;
+        file <<"\t||";
+        file <<name;
+        file <<"\n";
+        file.close();
+      }
+    }
+  }
+
+  std::cout<<"VORONOI\n";   //most completly correct pixel
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: "+ref_image_name+"\n";
+
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
+
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      Mat output;
+      Mat eval_out;
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
+        file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.voronoi();
         std::string name=std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        interpreter.set_pattern((*pattern).second);
-        output = interpreter.shadow_proximity(2);
         imwrite("result_"+name+".jpg",output);
-        //-> store pattern.txt
-        //-> store evaluation.txt
         eval_out=evaluator.evaluate_abs(output,file);
-        //evaluator.evaluate_ssim(output,file);
         imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
         file <<"\n";
-        std::cout<<"here\n";
         file.close();
-
       }
-      std::cout<<"after \n";
     }
   }
-  //s_proximity: (2)        "smallest total error"
-  std::cout<<"S_PROXIMITY2\n";
+
+  std::cout<<"VORONOI_SPLATT\n";   //most completly correct pixel
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
-      //!!!! pair: für benennung
-
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
 
       Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(sampler.calc_grid());    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("grid",sampler.calc_grid()));    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("halt",sampler.calc_halton()));   //4:HALT
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
 
-      std::cout<<"here\n";
-      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;
@@ -275,84 +314,218 @@ int img_id=0;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
         std::fstream file(analysis_doc.c_str(), std::ios::app);
-        std::cout<<"in_again\n";
         file <<img_id<<": ";
-        std::string name=std::to_string(img_id)+"shadow_proximity2"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
-        output = interpreter.shadow_proximity(2);
+        output = interpreter.splat_over(interpreter.voronoi(),2);
+        std::string name=std::to_string(img_id)+"voronoi_splatt"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".jpg",output);
-        //-> store pattern.txt
-        //-> store evaluation.txt
         eval_out=evaluator.evaluate_abs(output,file);
-        //evaluator.evaluate_ssim(output,file);
         imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
         file <<"\n";
-        std::cout<<"here\n";
         file.close();
       }
-      std::cout<<"after \n";
     }
   }
-/*
-  //area&s_proximity0:       "smallest amount of completly wrong+small total error"
-  std::cout<<"AREA&PROX0\n";
+
+
+  std::cout<<"S_PROXIMITY2\n";  // "smallest total error"
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
     std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
     {
-      //!!!! pair: für benennung
-
       std::string ref_image_name=(*ref_image).first;
       Mat ref_image_img         =(*ref_image).second;
       std::cout<<"ref_image: "+ref_image_name+"\n";
 
       Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
-      //patterns.push_back(sampler.calc_grid());    //0:GRID
-      //patterns.push_back(sampler.calc_rand_d());  //1:HEXA
-      patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("rand",sampler.calc_rand_d()));    //2:RAND
-      std::cout<<"here\n";
-      //patterns.push_back(sampler.calc_rand_d());  //4:HALT
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
+
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Evaluator evaluator(ref_image_img);
       Mat output;
       Mat eval_out;
       for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
       {
-
-        std::cout<<"in_again\n";
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
         file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.shadow_proximity(2);
+        std::string name=std::to_string(img_id)+"shadow_pr"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
+        eval_out=evaluator.evaluate_abs(output,file);
+        imwrite("eval_"+name+".jpg",eval_out);
+        img_id++;
+        file <<"\t||";
+        file <<name;
+        file <<"\n";
+        file.close();
+      }
+    }
+  }
+
+  std::cout<<"S_PROXIMITY2_SPLAT\n";  // "smallest total error"
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: "+ref_image_name+"\n";
+
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
+
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      Mat output;
+      Mat eval_out;
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
+        file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.splat_over(interpreter.shadow_proximity(2),2);
+
+        std::string name=std::to_string(img_id)+"shadow_pr_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
+        eval_out=evaluator.evaluate_abs(output,file);
+        imwrite("eval_"+name+".jpg",eval_out);
+        img_id++;
+        file <<"\t||";
+        file <<name;
+        file <<"\n";
+        file.close();
+      }
+    }
+  }
+
+  std::cout<<"AREA&PROX0\n";   //"smallest amount of completly wrong+small total error"
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: "+ref_image_name+"\n";
+
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
+
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      Mat output;
+      Mat eval_out;
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
+        file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
         interpreter.set_pattern((*pattern).second);
         output = interpreter.area_and_proximity(0);
-        imwrite("result_"+std::to_string(img_id)+"area_and_proximity0"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",output);
-        //-> store pattern.txt
-        //-> store evaluation.txt
+        std::string name=std::to_string(img_id)+"area_prox"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        //evaluator.evaluate_ssim(output,file);
-        imwrite("eval_"+std::to_string(img_id)+"area_and_proximity0"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first+".jpg",eval_out);
+        imwrite("eval_"+name+".jpg",eval_out);
         img_id++;
+        file <<"\t||";
+        file <<name;
         file <<"\n";
-        std::cout<<"here\n";
-
+        file.close();
       }
-      std::cout<<"after \n";
     }
   }
 
-  //delaunay:               "-"
+  std::cout<<"AREA&PROX0_SPLAT\n";   //"smallest amount of completly wrong+small total error"
+  for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
+  {
+    std::cout<<"sample_amount: "<<*sample_amount<<" of "<<ref_samples<<", "<<((*sample_amount)/((float)ref_samples*100))<<"perc\n";
+    for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image)
+    {
+      std::string ref_image_name=(*ref_image).first;
+      Mat ref_image_img         =(*ref_image).second;
+      std::cout<<"ref_image: "+ref_image_name+"\n";
 
-  //splatting:              "-"
+      Sampler sampler(*sample_amount,ref_image_img);
+      std::cout<<"taking samples patterns: ";
+      std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns;
+      //0:GRID
+        std::cout<<"GRID, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
+      //1:HEXA
+        //patterns.push_back(sampler.calc_rand_d());
+      //2:RAND
+        std::cout<<"RAND, ";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
+      //4:HALT
+        std::cout<<"HALT\n";
+        patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
 
-  //splatting-voronoi:     "-"
-
-  //splatting-s_proximity: "."
-
-  //...
-*/
-
-
+      Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
+      Evaluator evaluator(ref_image_img);
+      Mat output;
+      Mat eval_out;
+      for(std::vector<std::pair<std::string,std::vector<Pixel_d> > >::iterator pattern= patterns.begin(); pattern != patterns.end(); ++pattern)
+      {
+        std::fstream file(analysis_doc.c_str(), std::ios::app);
+        file <<img_id<<": ";
+        std::cout<<"IMAGE_ID: "<<img_id<<"\n";
+        interpreter.set_pattern((*pattern).second);
+        output = interpreter.splat_over(interpreter.area_and_proximity(0),2);
+        std::string name=std::to_string(img_id)+"area_prox_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
+        imwrite("result_"+name+".jpg",output);
+        eval_out=evaluator.evaluate_abs(output,file);
+        imwrite("eval_"+name+".jpg",eval_out);
+        img_id++;
+        file <<"\t||";
+        file <<name;
+        file <<"\n";
+        file.close();
+      }
+    }
+  }
 }
