@@ -15,7 +15,7 @@ int main(int argc, char** argv )
   auskunft über die qualität der interpretation geben?
   */
   //SAMPLING
-  int samples_amount=2048000;//1024000; //25%
+  int samples_amount=/*2048000;/*/1024000; //25%
 
   Mat image;
 
@@ -70,9 +70,9 @@ int main(int argc, char** argv )
     sam_vor.set_image(vor);
     pat=sam_vor.calc_rand_d();
     interpreter.set_pattern(pat);
-    vor=interpreter.voronoi();
+    vor=interpreter.shadow_proximity(2); //smallest total error
     //out_vor.write(vor);
-    outstr=std::string("vor")+std::to_string(i)+".jpg";
+    outstr=std::string("sha_prox_2")+std::to_string(i)+".jpg";
     imwrite(outstr,vor);
 
 
@@ -82,9 +82,9 @@ int main(int argc, char** argv )
     sam_pro.set_image(pro);       //set img
     pat=sam_pro.calc_rand_d();      //calc pat
     interpreter.set_pattern(pat); //set pat
-    pro=interpreter.naive_proximity(2,1);
+    pro=interpreter.area_only_proximity(0);  //area only
     //out_pro.write(pro);
-    outstr=std::string("pro")+std::to_string(i)+".jpg";
+    outstr=std::string("area_only")+std::to_string(i)+".jpg";
     imwrite(outstr,pro);
 
 
@@ -93,9 +93,9 @@ int main(int argc, char** argv )
     sam_sha.set_image(sha);       //set img
     pat=sam_sha.calc_rand_d();      //calc pat
     interpreter.set_pattern(pat); //set pat
-    sha=interpreter.shadow_proximity(0);
+    sha=interpreter.area_and_proximity(0); //most less completly wron pixel
     //out_pro.write(pro);
-    outstr=std::string("sha")+std::to_string(i)+".jpg";
+    outstr=std::string("area_prox_0")+std::to_string(i)+".jpg";
     imwrite(outstr,sha);
   }
 
