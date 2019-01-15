@@ -115,9 +115,9 @@ std::cout<<"Preperation_Start:.......................\n";
   /*ACHTUNG, wähle für das GRID-Sampling fair!*/
   std::cout<<"ACHTUNG: Das GRID-Image braucht eine faire Sample-Anzahl!\n";     //3000*2000 =100%
 
-  sample_amounts.push_back(ref_samples*0.5*0.5);                                //1500* 1000  =25%
+  //sample_amounts.push_back(ref_samples*0.5*0.5);                                //1500* 1000  =25%
   sample_amounts.push_back(ref_samples*0.5*0.5*0.5*0.5);                        //750*  500   =6.25%
-  sample_amounts.push_back(ref_samples*0.5*0.5*0.5*0.5*0.5*0.5);                //375*  250   =1.5625%
+  //sample_amounts.push_back(ref_samples*0.5*0.5*0.5*0.5*0.5*0.5);                //375*  250   =1.5625%
   std::cout<<"preparing sample amounts done\n";
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -137,6 +137,7 @@ std::cout<<".........................................\n";
 std::cout<<"Calculation_Start:.......................\n";
 int img_id=0;
 //CALCULATION:
+/*
   std::cout<<"DELAUNAY\n";
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
@@ -174,9 +175,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.delaunay();
         std::string name=std::to_string(img_id)+"delaunay"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -233,9 +234,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.delaunay_splat(splat_radius);
         std::string name=std::to_string(img_id)+"delaunay_ssplat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -244,7 +245,7 @@ int img_id=0;
       }
     }
   }
-
+  */
   std::cout<<"VORONOI\n";   //most completly correct pixel
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
@@ -282,9 +283,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.voronoi();
         std::string name=std::to_string(img_id)+"voronoi"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -293,7 +294,7 @@ int img_id=0;
       }
     }
   }
-
+/*
   std::cout<<"VORONOI_SPLATT\n";   //most completly correct pixel
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
   {
@@ -341,9 +342,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.splat_over(interpreter.voronoi(),splat_radius);
         std::string name=std::to_string(img_id)+"voronoi_splatt"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -352,7 +353,6 @@ int img_id=0;
       }
     }
   }
-
 
   std::cout<<"S_PROXIMITY2\n";  // "smallest total error"
   for(std::vector<int>::iterator sample_amount = sample_amounts.begin(); sample_amount != sample_amounts.end(); ++sample_amount)
@@ -391,9 +391,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.shadow_proximity(2);
         std::string name=std::to_string(img_id)+"shadow_pr"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -450,9 +450,9 @@ int img_id=0;
         output = interpreter.splat_over(interpreter.shadow_proximity(2),splat_radius);
 
         std::string name=std::to_string(img_id)+"shadow_pr_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -499,9 +499,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.area_and_proximity(0);
         std::string name=std::to_string(img_id)+"area_prox"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -557,9 +557,9 @@ int img_id=0;
         interpreter.set_pattern((*pattern).second);
         output = interpreter.splat_over(interpreter.area_and_proximity(0),splat_radius);
         std::string name=std::to_string(img_id)+"area_prox_splat"+std::to_string(*sample_amount)+ref_image_name+(*pattern).first;
-        imwrite("result_"+name+".jpg",output);
+        imwrite("result_"+name+".png",output);
         eval_out=evaluator.evaluate_abs(output,file);
-        imwrite("eval_"+name+".jpg",eval_out);
+        imwrite("eval_"+name+".png",eval_out);
         img_id++;
         file <<"\t||";
         file <<name;
@@ -568,4 +568,5 @@ int img_id=0;
       }
     }
   }
+  */
 }
