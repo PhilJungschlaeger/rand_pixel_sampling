@@ -27,8 +27,16 @@ void getdir (std::string dir, std::vector<std::string> &files)
 }
 
 
-//usage:
-//reads all imagefiles from [folder]
+//usage: ./sample_example ./path_to_image_folder
+//	-this script uses the sampler class. The path_to_image_folder should provide all
+//  reference images.
+//
+//	-after loading, it samples them in a grid, halton and random pattern
+//
+// -all the samples are stored in seperate vectors of pixels (x,y,r,g,b)
+// 	the seperate vectors are stored in the pattern vector
+//
+//	-to visualize the output, the interpreter is used
 
 int main(int argc, char** argv )
 {
@@ -55,13 +63,16 @@ int main(int argc, char** argv )
         //std::cout<<"exlude!?:"<<files[i]<<"\n";
       }
   }
-  std::cout<<"loading of reference images done!\n";
-////////////////////////////////////////////////////////////////////////////////
+  std::cout<<"loading of reference images done!\n\n";
 
-	int sample_amount = ref_images[0].second.cols *ref_images[0].second.rows *0.5*0.5*0.5*0.5; // How many samples? !achutng grid images brauchen passenden wert!
-	int ref_samples=ref_images[0].second.cols*ref_images[0].second.rows;
 
-    std::cout<<"sample_amount: "<<sample_amount<<" of "<<ref_samples<<", "<<((sample_amount)/((float)ref_samples*100))<<"perc\n";
+
+//SAMPLING //////////////////////////////////////////////////////////////////////////////
+
+	int sample_amount = ref_images[0].second.cols *ref_images[0].second.rows *0.5*0.5*0.5*0.5; // How many samples? !achtung grid images brauchen passenden wert!
+	int ref_samples = ref_images[0].second.cols*ref_images[0].second.rows; //reference image
+    //std::cout<<"Sampling "<<sample_amount<<" samples, which are "<<((sample_amount)/((float)ref_samples*100))<<"percent of the reference image.\n";
+
     for(std::vector<std::pair<std::string, Mat> >::iterator ref_image = ref_images.begin(); ref_image != ref_images.end(); ++ref_image) //für alle ref IMAGES
     {
 
@@ -70,24 +81,22 @@ int main(int argc, char** argv )
 
       Sampler sampler(sample_amount,ref_image_img); // Hier wird ein sampler erstellt!
 
-      std::cout<<"Sampling reference image: "+ref_image_name+"\n";
+      std::cout<<"\n\n#Sampling reference image ("+ref_image_name+") with "<<sample_amount<<" samples ("<<((sample_amount)/((float)ref_samples*100))<<" percent of reference image pixels).\n";
       std::vector<std::pair<std::string,std::vector<Pixel_d> > > patterns; //speichert die verschiedenen samples!
       //0:GRID
-        std::cout<<"GRID, ";
         patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Grid",sampler.calc_grid()));
       //1:HEXA
         //patterns.push_back(sampler.calc_rand_d());
       //2:RAND
-        std::cout<<"RAND, ";
         patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Rand",sampler.calc_rand_d()));
       //4:HALT
-        std::cout<<"HALT\n";
         patterns.push_back(std::pair<std::string,std::vector<Pixel_d> >("Halt",sampler.calc_halton()));
 
 		//die verschiedenen verteilungen sind nun im vektor namens pattern verfügbar!
-		std::cout<<"Sampling done!\n";
+		std::cout<<"#Sampling done!\n";
 
 	   //Hier wird eine Interpreter erstellt um die samples zu visualisieren:
+	   std::cout<<"\n\n#Visualizing Image!\n";
       Interpreter interpreter(ref_image_img.cols,ref_image_img.rows);
       Mat output;
       Mat eval_out;
@@ -98,5 +107,6 @@ int main(int argc, char** argv )
         std::string name="basic_samples"+std::to_string(sample_amount)+ref_image_name+(*pattern).first;
         imwrite("result_"+name+".png",output);
       }
+		std::cout<<"#Visualizing done!\n";
     }
   }
